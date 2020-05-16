@@ -178,7 +178,7 @@ public class IpCameraHandler extends BaseThingHandler {
     int mp4Preroll = 0;
     private LinkedList<byte[]> fifoSnapshotBuffer = new LinkedList<byte[]>();
     private int preroll, postroll, snapCount = 0;
-    private boolean updateImage = true;
+    private boolean updateImageChannel = false;
     private int updateCounter = 0;
     private byte lowPriorityCounter = 0;
     public String hostIp = "0.0.0.0";
@@ -631,9 +631,13 @@ public class IpCameraHandler extends BaseThingHandler {
 
     public void processSnapshot() {
         lockCurrentSnapshot.lock();
-        if (updateImage) {
+        if (updateImageChannel) {
             updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
         }
+        if (firstMotionAlarm || firstAudioAlarm || motionAlarmUpdateSnapshot || audioAlarmUpdateSnapshot) {
+            updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
+        }
+
         if (streamingSnapshotMjpeg) {
             sendMjpegFrame(currentSnapshot, snapshotMjpegChannelGroup);
         }
@@ -1219,9 +1223,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 String OutputOptions = "-f null -";
                 String filterOptions = "";
-                inOptions = "-rtsp_transport tcp -hide_banner -loglevel warning";
+                inOptions = "-rtsp_transport tcp";
                 if (!rtspUri.contains("rtsp")) {
-                    inOptions = "-hide_banner -loglevel warning";
+                    inOptions = "";
                 }
                 if (audioAlarmEnabled == false) {
                     filterOptions = "-an";
@@ -1380,6 +1384,19 @@ public class IpCameraHandler extends BaseThingHandler {
         } // caution "REFRESH" can still progress to brand Handlers below the else.
         else {
             switch (channelUID.getId()) {
+                case CHANNEL_FFMPEG_MOTION_CONTROL:
+                    if ("ON".equals(command.toString())) {
+                        motionAlarmEnabled = true;
+                    } else if ("OFF".equals(command.toString()) || "0".equals(command.toString())) {
+                        motionAlarmEnabled = false;
+                        noMotionDetected(CHANNEL_MOTION_ALARM);
+                    } else {
+                        motionAlarmEnabled = true;
+                        motionThreshold = Double.valueOf(command.toString());
+                        motionThreshold = motionThreshold / 10000;
+                    }
+                    setupFfmpegFormat("RTSPHELPER");
+                    return;
                 case CHANNEL_GIF_FILENAME:
                     logger.debug("Changing the gif filename to {}.", command);
                     gifFilename = command.toString();
@@ -1428,8 +1445,9 @@ public class IpCameraHandler extends BaseThingHandler {
                         if (snapshotUri.equals("")) {
                             ffmpegSnapshotGeneration = true;
                             setupFfmpegFormat("SNAPSHOT");
+                            updateImageChannel = false;
                         } else {
-                            updateImage = true;
+                            updateImageChannel = true;
                             sendHttpGET(snapshotUri);// Allows this to change Image FPS on demand
                         }
                     } else {
@@ -1437,7 +1455,7 @@ public class IpCameraHandler extends BaseThingHandler {
                             ffmpegSnapshot.stopConverting();
                             ffmpegSnapshotGeneration = false;
                         }
-                        updateImage = false;
+                        updateImageChannel = false;
                     }
                     return;
                 case CHANNEL_UPDATE_GIF:
@@ -1562,10 +1580,13 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         pollCameraJob = pollCamera.scheduleAtFixedRate(pollingCamera, 4000,
                 Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
-        // logger.info("IP Camera at {} is now online.", ipAddress);
-
         if (!rtspUri.equals("")) {
             updateState(CHANNEL_RTSP_URL, new StringType(rtspUri));
+        }
+        if (updateImageChannel) {
+            updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
+        } else {
+            updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("OFF"));
         }
         if (!listOfGroupHandlers.isEmpty()) {
             for (IpCameraGroupHandler handle : listOfGroupHandlers) {
@@ -1578,6 +1599,7 @@ public class IpCameraHandler extends BaseThingHandler {
         bringCameraOnline();
         snapshotUri = "";// ffmpeg is a valid option. Simplify further checks.
         if (updateImageEvents.equals("1")) {
+            updateImageChannel = false;
             logger.info(
                     "Binding has no snapshot url. Using your CPU and FFmpeg (must be manually installed) to create snapshots.");
             ffmpegSnapshotGeneration = true;
@@ -1599,9 +1621,6 @@ public class IpCameraHandler extends BaseThingHandler {
                     logger.debug("Camera at {} has a snapshot address of:{}:", ipAddress, snapshotUri);
                     if (sendHttpRequest("GET", snapshotUri, null)) {
                         bringCameraOnline();
-                        if (updateImage) {
-                            updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
-                        }
                     }
                 } else {
                     snapshotIsFfmpeg();
@@ -1715,9 +1734,6 @@ public class IpCameraHandler extends BaseThingHandler {
             } else if (!snapshotUri.equals("")) {
                 if (sendHttpRequest("GET", snapshotUri, null)) {
                     bringCameraOnline();
-                    if (updateImage) {
-                        updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
-                    }
                 }
             } else if (!rtspUri.equals("")) {
                 snapshotIsFfmpeg();
@@ -1756,7 +1772,7 @@ public class IpCameraHandler extends BaseThingHandler {
         public void run() {
             // Snapshot should be first to keep consistent time between shots
             if (!snapshotUri.equals("")) {
-                if (updateImageEvents.contains("1") || updateImage) {
+                if (updateImageEvents.contains("1") || updateImageChannel) {
                     sendHttpGET(snapshotUri);
                 } else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
                     sendHttpGET(snapshotUri);
@@ -1827,7 +1843,6 @@ public class IpCameraHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        logger.debug("BINDING initialize()");
         config = thing.getConfiguration();
         onvifManager = new OnvifManager();
         ptzManager = new OnvifManager();
@@ -1837,7 +1852,7 @@ public class IpCameraHandler extends BaseThingHandler {
         preroll = Integer.parseInt(config.get(CONFIG_GIF_PREROLL).toString());
         postroll = Integer.parseInt(config.get(CONFIG_GIF_POSTROLL).toString());
         updateImageEvents = config.get(CONFIG_IMAGE_UPDATE_EVENTS).toString();
-        updateImage = (boolean) config.get(CONFIG_UPDATE_IMAGE);
+        updateImageChannel = (boolean) config.get(CONFIG_UPDATE_IMAGE);
 
         snapshotUri = (config.get(CONFIG_SNAPSHOT_URL_OVERRIDE) == null) ? ""
                 : getCorrectUrlFormat(config.get(CONFIG_SNAPSHOT_URL_OVERRIDE).toString());
@@ -1910,9 +1925,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 break;
         }
         // for poll times above 5 seconds don't display a warning about the Image channel.
-        if (9000 <= Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()) && updateImage) {
+        if (9000 <= Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()) && updateImageChannel) {
             logger.warn(
-                    "The Image channel is set to update more often than 8 seconds. This is not recommended the Images channel is best used only for higher poll times. See the readme file on how to display the cameras picture for best results or use a higher poll time.");
+                    "The Image channel is set to update more often than 8 seconds. This is not recommended. The Image channel is best used only for higher poll times. See the readme file on how to display the cameras picture for best results or use a higher poll time.");
         }
         cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 1, 58, TimeUnit.SECONDS);
     }

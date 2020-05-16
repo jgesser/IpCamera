@@ -98,7 +98,7 @@ public class Ffmpeg {
                         if (format.equals("RTSPHELPER")) {
                             logger.debug("{}", line);
                             if (line.contains("lavfi.")) {
-                                if (countOfMotions == 3) {
+                                if (countOfMotions == 4) {
                                     ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
                                 } else {
                                     countOfMotions++;
@@ -106,7 +106,8 @@ public class Ffmpeg {
                             } else if (line.contains("speed=")) {
                                 if (countOfMotions > 0) {
                                     countOfMotions--;
-                                    if (countOfMotions == 0) {
+                                    countOfMotions--;
+                                    if (countOfMotions <= 0) {
                                         ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
                                     }
                                 }
