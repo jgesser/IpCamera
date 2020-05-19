@@ -1100,15 +1100,14 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     private void storeSnapshots() {
-        // setupFfmpegFormat() will create an error if the output location is not set
         int count = 0;
-        OutputStream fos = null;
+        lockCurrentSnapshot.lock();
         for (Object incomingJpeg : fifoSnapshotBuffer) {
             byte[] foo = (byte[]) incomingJpeg;
             File file = new File(ffmpegOutputFolder + "snapshot" + count + ".jpg");
             count++;
             try {
-                fos = new FileOutputStream(file);
+                OutputStream fos = new FileOutputStream(file);
                 fos.write(foo);
                 fos.close();
             } catch (FileNotFoundException e) {
@@ -1116,6 +1115,7 @@ public class IpCameraHandler extends BaseThingHandler {
             } catch (IOException e) {
                 logger.error("IOException {}", e);
             }
+            lockCurrentSnapshot.unlock();
         }
     }
 
@@ -1205,8 +1205,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     inOptions = "-y -t " + mp4RecordTime;
                 }
                 ffmpegRecord = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
-                        rtspUri, "-acodec copy -vcodec copy", ffmpegOutputFolder + mp4Filename + ".mp4", username,
-                        password);
+                        rtspUri, "-an -vcodec copy", ffmpegOutputFolder + mp4Filename + ".mp4", username, password);
                 if (mp4Preroll > 0) {
                     // fetchFromHLS();
                 }
