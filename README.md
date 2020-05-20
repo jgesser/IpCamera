@@ -812,9 +812,9 @@ With a poll time below 9000ms
 **HLS HTTP Live Streaming**
 
 The channel called 'startStream' can now be used to have HLS run non stop to lower the startup delay that comes with using this type of stream. 
-If the channel is OFF the stream will start and stop automatically as required, but you will get a delay before the stream is fully running and this may cause you to need to ask twice for the stream.
+If the channel is OFF, the stream will start and stop automatically as required, but you will get a delay before the stream is fully running and this may cause you to need to ask twice for the stream.
 It can be helpful sometimes to use this line in a rule to start the stream before it is needed further on in the rule ``sendHttpGetRequest("http://192.168.0.2:54321/ipcamera.m3u8")`` as the stream will stay running for 60 seconds.
-This also helps if you are moving back and forth in a UI as the stream does not keep stopping and needing to start each time you move around the UI.
+This 60 second delay before the stream is stopped helps when you are moving back and forth in a UI, as the stream does not keep stopping and needing to start each time you move around the UI.
 Cameras with h264 format streams (most cameras except ESP32 Cams) can have this copied into the HLS format which can be used to stream to Chromecasts and also display in browsers that support this format using the webview or Habpanel items. 
 Apple devices have excellent support for HLS due to the standard being invented by Apple. 
 Some browsers like Chrome may require a plugin or an update to be installed before they are able to display the video.
@@ -824,25 +824,26 @@ Google metadata support now allows you to ask Google to 'Show the Front Door Cam
 Example of how this is done in your items file.
 
 ```
+
 String FrontDoorCamHlsUrl "Front Door" { channel="ipcamera:ONVIF:FrontDoor:hlsUrl", ga="Camera" [ protocols="hls" ] }
+
 ```   
 
 
 To use the HLS steaming features, you need to:
 
 1. Set a valid ``SERVER_PORT`` as the default value of -1 will turn the feature off.
-2. Add any IPs that need access to the ``IP_WHITELIST`` surrounding each one in brackets (see below example) or DISABLE the whitelist feature. 
-3. Ensure Ffmpeg is installed.
-How to do this in linux is shown in this readme, or visit their website or Google.
-4. For cameras that do not auto detect the H264 stream which is done for ONVIF cameras, you will need to use the ``FFMPEG_INPUT`` and provide a http or rtsp link. 
+2. The audio format in the cameras settings must be AAC for Chromecast to work.
+3. Ensure FFmpeg is installed.
+4. For cameras that do not auto detect the H264 stream which is done for ONVIF cameras, you will need to use the ``FFMPEG_INPUT`` and provide a http or rtsp link.
 This is used for HLS and many other features like the animated GIF.
 5. For Onvif cameras the ``ONVIF_MEDIA_PROFILE`` needs to match the stream number you have setup for h264. 
 This is usually 0 and is the main-stream, the higher numbers are the sub-streams if your camera has any. 
 For non Onvif cameras you just need to check the url in the last step works and is provided to the binding.
-6. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder. 
+6. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format. 
+7. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder.
 Only a small amount of storage is needed.
 I use micro SD cards and a ramdrive and have excellent performance.
-7. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format.
 
 
 **Ram drive setup**
@@ -879,7 +880,7 @@ Text label="HLS Webview Stream" icon="camera"{Webview url="http://192.168.1.9:54
 
 In order to display camera hls streams side by side you can also create a webView item and link it to a HTML file in the conf/html directory as follows:
 The webView url is that of your openhab installation.
-Please note that the iOS app will currently open the streams in new full screen players, however a fix has been merged for the next app update.
+
 
 ```
 Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
@@ -924,34 +925,34 @@ Habpanel can be used with HLS by adding a template widget with the following cod
 
 **FFmpeg HLS Special settings**
 
-To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest AAC. Then you need to change the from the first line to the second one.
+To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest using ``AAC`` as MP3 is not supported by Google/Nest. Then you need to change the HLS settings to what you need, some are suggestions below.
 
 
 Less delay behind realtime (no audio) if your cameras iFrames are 1 second apart:
 
 ```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -segment_list_flags live -flags -global_header -hls_flags delete_segments -hls_time 1 -hls_list_size 4
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 1 -hls_list_size 4
 ```
 
 
 For cameras with no audio in the stream (default setting) and it must be a supported format like AAC.
 
 ```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -segment_list_flags live -flags -global_header
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
 ```
 
 
 For cameras with audio in the stream. Note will break Chromecast if the camera does not send audio which is why this is not the default.
 
 ```bash
--strict -2 -acodec copy -vcodec copy -hls_flags delete_segments -segment_list_flags live -flags -global_header
+-strict -2 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
 ```
 
 
 Some browsers require larger segment sizes to prevent choppy playback, this can be done with this setting to create 10 second segment files which increases the time before you can get playback working.
 
 ```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_time 10 -hls_flags delete_segments
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 10 -hls_list_size 4
 
 ```
 

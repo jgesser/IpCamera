@@ -1101,7 +1101,9 @@ public class IpCameraHandler extends BaseThingHandler {
 
     private void storeSnapshots() {
         int count = 0;
+        // Need to lock as fifoSnapshotBuffer is not thread safe and new snapshots can be incoming.
         lockCurrentSnapshot.lock();
+        logger.debug("Storing snapshots now to disk for GIF");
         for (Object incomingJpeg : fifoSnapshotBuffer) {
             byte[] foo = (byte[]) incomingJpeg;
             File file = new File(ffmpegOutputFolder + "snapshot" + count + ".jpg");
@@ -1115,8 +1117,8 @@ public class IpCameraHandler extends BaseThingHandler {
             } catch (IOException e) {
                 logger.error("IOException {}", e);
             }
-            lockCurrentSnapshot.unlock();
         }
+        lockCurrentSnapshot.unlock();
     }
 
     public void setupFfmpegFormat(String format) {
@@ -1423,7 +1425,7 @@ public class IpCameraHandler extends BaseThingHandler {
                         }
                     } else {
                         if (ffmpegHLS != null) {
-                            ffmpegHLS.stopConverting();
+                            ffmpegHLS.setKeepAlive(1);// Next poll HLS will stop
                         }
                     }
                     return;

@@ -131,7 +131,7 @@ public class Ffmpeg {
                         logger.debug("Animated GIF has been created and is ready for use.");
                         try {
                             // Without a small delay, Pushover sends no file 10% of time.
-                            Thread.sleep(750);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                         }
                         ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
@@ -181,10 +181,16 @@ public class Ffmpeg {
             if (process != null) {
                 process.destroyForcibly();
             }
-            keepAlive = 60;
             if (format.equals("HLS")) {
-                ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("OFF"));
+                if (keepAlive == -1) {
+                    logger.warn("HLS stopped when Stream should be running non stop, restarting HLS now.");
+                    startConverting();
+                    return;
+                } else {
+                    ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("OFF"));
+                }
             }
+            keepAlive = 60;
         }
     }
 }
