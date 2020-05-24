@@ -208,9 +208,8 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         ipCameraHandler.lockCurrentSnapshot.unlock();
                         ipCameraHandler.processSnapshot();
                     } else if (onvifEvent) {
-                        String temp = new String(incomingJpeg, StandardCharsets.UTF_8);
                         ipCameraHandler.onvifEventHandler
-                                .eventRecieved(temp.substring(temp.indexOf("<SOAP-ENV:Body>")));
+                                .eventRecieved(new String(incomingJpeg, StandardCharsets.UTF_8));
                     } else {
                         if (recievedBytes > 1000) {
                             ipCameraHandler.sendMjpegFrame(incomingJpeg, ipCameraHandler.mjpegChannelGroup);
@@ -219,7 +218,9 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                     recievedBytes = 0;
                 }
             }
-        } finally {
+        } finally
+
+        {
             ReferenceCountUtil.release(msg);
         }
     }
@@ -267,7 +268,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
             return;
         }
         if (cause.toString().contains("Connection reset by peer")) {
-            logger.debug("Connection reset by peer.");
+            logger.trace("Connection reset by peer.");
         } else if (cause.toString().contains("An established connection was aborted by the software")) {
             logger.debug("An established connection was aborted by the software");
         } else if (cause.toString().contains("An existing connection was forcibly closed by the remote host")) {
@@ -300,7 +301,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
-        logger.debug("Closing a StreamServerHandler.");
+        logger.trace("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);
         } else if (handlingSnapshotStream) {

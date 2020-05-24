@@ -68,7 +68,7 @@ public class EventsRequest implements OnvifRequest {
     }
 
     public void eventRecieved(String eventMessage) {
-        logger.trace("Onvif event : {}", eventMessage);
+        logger.debug("Onvif event : {}", eventMessage);
         if (eventMessage.contains("Name=\"IsMotion\" Value=\"true\"")) {
             ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
         } else if (eventMessage.contains("Name=\"IsMotion\" Value=\"false\"")) {
