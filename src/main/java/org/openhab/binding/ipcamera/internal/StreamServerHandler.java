@@ -64,6 +64,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
     int recievedBytes = 0;
     int count = 0;
     boolean updateSnapshot = false;
+    boolean onvifEvent = false;
 
     public StreamServerHandler(IpCameraHandler ipCameraHandler) {
         this.ipCameraHandler = ipCameraHandler;
@@ -173,6 +174,12 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         case "/snapshot.jpg":
                             updateSnapshot = true;
                             break;
+                        case "/OnvifEvent":
+                            onvifEvent = true;
+                            break;
+                        default:
+                            logger.debug("Stream Server recieved request \tPUT:{}", httpRequest.uri());
+                            break;
                     }
                 }
             }
@@ -200,6 +207,10 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         ipCameraHandler.currentSnapshot = incomingJpeg;
                         ipCameraHandler.lockCurrentSnapshot.unlock();
                         ipCameraHandler.processSnapshot();
+                    } else if (onvifEvent) {
+                        String temp = new String(incomingJpeg, StandardCharsets.UTF_8);
+                        ipCameraHandler.onvifEventHandler
+                                .eventRecieved(temp.substring(temp.indexOf("<SOAP-ENV:Body>")));
                     } else {
                         if (recievedBytes > 1000) {
                             ipCameraHandler.sendMjpegFrame(incomingJpeg, ipCameraHandler.mjpegChannelGroup);

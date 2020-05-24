@@ -66,6 +66,7 @@ import org.openhab.binding.ipcamera.internal.HttpOnlyHandler;
 import org.openhab.binding.ipcamera.internal.InstarHandler;
 import org.openhab.binding.ipcamera.internal.MyNettyAuthHandler;
 import org.openhab.binding.ipcamera.internal.StreamServerHandler;
+import org.openhab.binding.ipcamera.onvif.EventsRequest;
 import org.openhab.binding.ipcamera.onvif.GetSnapshotUri;
 import org.openhab.binding.ipcamera.onvif.PTZRequest;
 import org.slf4j.Logger;
@@ -184,6 +185,8 @@ public class IpCameraHandler extends BaseThingHandler {
     public String hostIp = "0.0.0.0";
     private String ffmpegOutputFolder = "";
 
+    Configuration listOfMediaProfiles;
+
     public ArrayList<String> listOfRequests = new ArrayList<String>(18);
     public ArrayList<Channel> listOfChannels = new ArrayList<Channel>(18);
     // Status can be -2=storing a reply, -1=closed, 0=closing (do not re-use
@@ -215,8 +218,10 @@ public class IpCameraHandler extends BaseThingHandler {
     boolean shortMotionAlarm = true; // used for when the alarm is less than the polling amount of time.
     private OnvifManager onvifManager = new OnvifManager();
     private OnvifManager ptzManager = new OnvifManager(); // used so listener is in PTZ class.
+    OnvifManager eventManager = new OnvifManager();
     boolean movePTZ = false; // delay movements so all made at once
     PTZRequest ptzHandler = new PTZRequest("httponly");
+    public EventsRequest onvifEventHandler = new EventsRequest("httponly", this);
     public Double motionThreshold = 0.0016;
     public int audioThreshold = 35;
     @SuppressWarnings("unused")
@@ -1155,7 +1160,6 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 if (ffmpegHLS != null) {
                     ffmpegHLS.startConverting();
-                    // ffmpegHLS.setKeepAlive(60);
                 }
                 break;
             case "DASH":
@@ -1361,6 +1365,7 @@ public class IpCameraHandler extends BaseThingHandler {
         return "";
     }
 
+    @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         // logger.info("command {}:{}", channelUID, command);
@@ -1425,7 +1430,8 @@ public class IpCameraHandler extends BaseThingHandler {
                         }
                     } else {
                         if (ffmpegHLS != null) {
-                            ffmpegHLS.setKeepAlive(1);// Next poll HLS will stop
+                            ffmpegHLS.setKeepAlive(1);
+                            // ffmpegHLS.stopConverting();
                         }
                     }
                     return;
@@ -1648,15 +1654,6 @@ public class IpCameraHandler extends BaseThingHandler {
                         cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 2, TimeUnit.SECONDS);
                         logger.debug("snapshotUri is {}", snapshotUri);
                     }
-
-                    /*
-                     * //TODO for onvif alarms
-                     * else if (response.getXml().contains("CreatePullPointSubscriptionResponse")) {
-                     * // eventAddress = searchString(response.getXml(), "Address>");
-                     * onvifManager.sendOnvifRequest(thisOnvifCamera, new EventsRequest("PullMessagesRequest",
-                     * listOfMediaProfiles.get(selectedMediaProfile)));
-                     * }
-                     */
                 }
 
                 @Override
@@ -1684,7 +1681,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (paths == null) {
                         return;
                     }
-                    logger.debug("We sucessfully connected to a ONVIF SERVICE:{}", paths.getDeviceInformationPath());
+                    logger.debug("We successfully connected to an ONVIF SERVICE:{}", paths.getDeviceInformationPath());
                     onvifManager.getMediaProfiles(thisOnvifCamera, new OnvifMediaProfilesListener() {
                         @Override
                         public void onMediaProfilesReceived(@Nullable OnvifDevice device,
@@ -1722,10 +1719,13 @@ public class IpCameraHandler extends BaseThingHandler {
                                 onvifManager.sendOnvifRequest(thisOnvifCamera,
                                         new GetSnapshotUri(mediaProfiles.get(selectedMediaProfile)));
                             }
-                            // disable this in case it causes issues until proven.
-                            // onvifManager.sendOnvifRequest(thisOnvifCamera, new
-                            // EventsRequest("CreatePullPointSubscription",
-                            // listOfMediaProfiles.get(selectedMediaProfile), getHandle()));
+
+                            if (thing.getThingTypeUID().getId().equals("ONVIF")) {
+                                if (thisOnvifCamera != null) {
+                                    onvifEventHandler = new EventsRequest(eventManager, thisOnvifCamera,
+                                            paths.getDeviceInformationPath(), getHandle());
+                                }
+                            }
                         }
                     });
                 }
@@ -1847,6 +1847,7 @@ public class IpCameraHandler extends BaseThingHandler {
         config = thing.getConfiguration();
         onvifManager = new OnvifManager();
         ptzManager = new OnvifManager();
+        eventManager = new OnvifManager();
         ipAddress = config.get(CONFIG_IPADDRESS).toString();
         username = (config.get(CONFIG_USERNAME) == null) ? "" : config.get(CONFIG_USERNAME).toString();
         password = (config.get(CONFIG_PASSWORD) == null) ? "" : config.get(CONFIG_PASSWORD).toString();
@@ -1936,6 +1937,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private void restart() {
         onvifManager.destroy();
         ptzManager.destroy();
+        eventManager.destroy();
         if (pollCameraJob != null) {
             pollCameraJob.cancel(true);
             pollCamera.shutdown();
@@ -1963,6 +1965,7 @@ public class IpCameraHandler extends BaseThingHandler {
         closeAllChannels();
 
         if (ffmpegHLS != null) {
+            ffmpegHLS.setKeepAlive(60);
             ffmpegHLS.stopConverting();
             ffmpegHLS = null;
         }

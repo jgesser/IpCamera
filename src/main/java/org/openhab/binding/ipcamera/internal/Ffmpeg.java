@@ -49,7 +49,7 @@ public class Ffmpeg {
     public void setKeepAlive(int seconds) {
         if (seconds == -1) {
             keepAlive = -1;
-        } else if (keepAlive != -1) {
+        } else {// if (keepAlive != -1) {
             keepAlive = seconds
                     / (Integer.parseInt(ipCameraHandler.config.get(CONFIG_POLL_CAMERA_MS).toString()) / 1000);
         }
@@ -176,7 +176,7 @@ public class Ffmpeg {
 
     public void stopConverting() {
         if (streamRunning.isAlive()) {
-            logger.debug("Stopping ffmpeg now");
+            logger.debug("Stopping ffmpeg {} now", format);
             running = false;
             if (process != null) {
                 process.destroyForcibly();
