@@ -1651,8 +1651,8 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (response.request().toString().contains("org.openhab.binding.ipcamera.onvif.GetSnapshotUri")) {
                         snapshotUri = getCorrectUrlFormat(
                                 org.openhab.binding.ipcamera.onvif.GetSnapshotUri.getParsedResult(response.getXml()));
-                        cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 2, TimeUnit.SECONDS);
                         logger.debug("snapshotUri is {}", snapshotUri);
+                        cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 2, TimeUnit.SECONDS);
                     }
                 }
 
@@ -1662,7 +1662,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     switch (errorCode) {
                         case -1:
                             // Camera may be off?
-                            logger.debug("ONVIF error, is the camera off, firewall blocking or disconnected? {}:{}",
+                            logger.debug("ONVIF error: Is the camera off, disconnected or firewall blocking? {}:{}",
                                     errorCode, errorMessage);
                             return;
                         case 404:
@@ -1705,6 +1705,7 @@ public class IpCameraHandler extends BaseThingHandler {
                                             public void onMediaStreamURIReceived(@Nullable OnvifDevice device,
                                                     @Nullable OnvifMediaProfile profile, @Nullable String uri) {
                                                 if (uri != null) {
+                                                    logger.debug("RTSP url auto discovered");
                                                     rtspUri = uri;
                                                     if (ffmpegSnapshotGeneration) {
                                                         setupFfmpegFormat("SNAPSHOT");
@@ -1715,7 +1716,8 @@ public class IpCameraHandler extends BaseThingHandler {
                                             }
                                         });
                             }
-                            if (snapshotUri.equals("") && !ffmpegSnapshotGeneration) {
+                            if (snapshotUri.equals("")) {// && !ffmpegSnapshotGeneration) {
+                                logger.debug("Trying to find snapshot url.");
                                 onvifManager.sendOnvifRequest(thisOnvifCamera,
                                         new GetSnapshotUri(mediaProfiles.get(selectedMediaProfile)));
                             }

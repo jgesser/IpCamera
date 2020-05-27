@@ -326,6 +326,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="externalMotion" typeId="externalMotion"/>
         <channel id="motionAlarm" typeId="motionAlarm"/>
+        <channel id="pirAlarm" typeId="pirAlarm"/>
         <channel id="lastMotionType" typeId="lastMotionType"/>   
         <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
         <channel id="audioAlarm" typeId="audioAlarm"/>

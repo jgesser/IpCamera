@@ -178,7 +178,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             onvifEvent = true;
                             break;
                         default:
-                            logger.debug("Stream Server recieved request \tPUT:{}", httpRequest.uri());
+                            logger.debug("Stream Server recieved unknown request \tPUT:{}", httpRequest.uri());
                             break;
                     }
                 }
@@ -301,7 +301,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
-        logger.trace("Closing a StreamServerHandler.");
+        // logger.trace("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);
         } else if (handlingSnapshotStream) {

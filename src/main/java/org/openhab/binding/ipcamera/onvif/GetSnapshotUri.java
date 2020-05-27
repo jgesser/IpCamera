@@ -40,9 +40,8 @@ public class GetSnapshotUri implements OnvifRequest {
 
     @Override
     public String getXml() {
-        return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver10/media/wsdl\"> \n" + "\n" + "\n" + "\n" + "\n"
-                + "            <ProfileToken>" + profileToken + "</ProfileToken> \n" + "\n" + "\n" + "\n" + "\n"
-                + "        </GetSnapshotUri>";
+        return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\"><ProfileToken>" + profileToken
+                + "</ProfileToken></GetSnapshotUri>";
     }
 
     @Override

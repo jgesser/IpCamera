@@ -13,7 +13,7 @@
 
 package org.openhab.binding.ipcamera.onvif;
 
-import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CHANNEL_MOTION_ALARM;
+import static org.openhab.binding.ipcamera.IpCameraBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -68,11 +68,18 @@ public class EventsRequest implements OnvifRequest {
     }
 
     public void eventRecieved(String eventMessage) {
-        logger.debug("Onvif event : {}", eventMessage);
+        logger.debug("Onvif eventRecieved : {}", eventMessage);
         if (eventMessage.contains("Name=\"IsMotion\" Value=\"true\"")) {
             ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
         } else if (eventMessage.contains("Name=\"IsMotion\" Value=\"false\"")) {
             ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+        }
+        if (eventMessage.contains("VideoSource/MotionAlarm")) { // PIR alarm from a HIK
+            if (eventMessage.contains("SimpleItem Name=\"State\" Value=\"true\"")) {
+                ipCameraHandler.motionDetected(CHANNEL_PIR_ALARM);
+            } else if (eventMessage.contains("SimpleItem Name=\"State\" Value=\"false\"")) {
+                ipCameraHandler.noMotionDetected(CHANNEL_PIR_ALARM);
+            }
         }
     }
 
@@ -83,16 +90,19 @@ public class EventsRequest implements OnvifRequest {
                 if (response == null) {
                     return;
                 }
-                logger.debug("We got a ONVIF EVENT:{}", response.getXml());
+                logger.debug("We got an ONVIF EVENT:{}", response.getXml());
                 if (response.getXml().contains("GetEventPropertiesResponse")) {
-                    // sendRequest("CreatePullPointSubscription");
+                    sendRequest("CreatePullPointSubscription");
                     sendRequest("Subscribe");
                 } else if (response.getXml().contains("SubscribeResponse")) {
-                    sendRequest("CreatePullPointSubscription");
+                    logger.info("Onvif Subscribe appears to be working for Alarms/Events.");
                 } else if (response.getXml().contains("CreatePullPointSubscriptionResponse")) {
                     eventAddress = searchString(response.getXml(), "Address>");
-                    logger.debug("address is {}", eventAddress);
-                    sendRequest("PullMessages");
+                    logger.info("Onvif PullMessages not working yet for Address:{}", eventAddress);
+                    // logger.debug("Onvif Event address is:{}", eventAddress);
+                    sendRequest("PullMessages"); // needs to be sent to the address captured in above lines.
+                } else if (response.getXml().contains("PullMessagesResponse")) {
+                    eventRecieved(response.getXml());
                 }
             }
 
@@ -107,16 +117,18 @@ public class EventsRequest implements OnvifRequest {
     public String getXml() {
         switch (requestType) {
             case "Subscribe":// works
-                return "<m:Subscribe xmlns:m=\"http://docs.oasis-open.org/wsn/b-2\" \r\n"
-                        + " xmlns:m0=\"http://www.w3.org/2005/08/addressing\">\r\n" + " <m:ConsumerReference>\r\n"
-                        + " <m0:Address>\r\n" + "  http://" + ipCameraHandler.hostIp + ":" + ipCameraHandler.serverPort
-                        + "/OnvifEvent\r\n" + " </m0:Address>\r\n" + " </m:ConsumerReference>\r\n" + "</m:Subscribe>";
-
-            case "CreatePullPointSubscription":// works
-                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT1M</InitialTerminationTime></CreatePullPointSubscription>";
-            case "PullMessages":// needs work, below is only 120 seconds before timeout.
-                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT120S</Timeout><MessageLimit>20</MessageLimit></PullMessages>";
-            case "GetEventProperties": // Dahua works.
+                return "<Subscribe xmlns=\"http://docs.oasis-open.org/wsn/b-2/\"><ConsumerReference><Address>http://"
+                        + ipCameraHandler.hostIp + ":" + ipCameraHandler.serverPort
+                        + "/OnvifEvent</Address></ConsumerReference></Subscribe>";
+            case "Unsubscribe":// not tested
+                return "<Unsubscribe xmlns=\"http://docs.oasis-open.org/wsn/b-2/\"></Unsubscribe>";
+            case "CreatePullPointSubscription":// testing
+                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT600S</InitialTerminationTime></CreatePullPointSubscription>";
+            case "PullMessages":// not tested, below is only 60 seconds before timeout.
+                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT1M</Timeout><MessageLimit>1024</MessageLimit></PullMessages>";
+            case "GetEventProperties": // testing
+                return "<GetEventProperties xmlns=\"http://www.onvif.org/ver10/events/wsdl\"/>";
+            case "GetEventProperties2": // Dahua works.
                 return "<GetEventProperties xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><To>" + onvifServicesUrl
                         + "</To></GetEventProperties>";
         }
