@@ -1223,7 +1223,7 @@ Any feedback, push requests and ideas are welcome, just please create a Github i
 
 Areas the binding could be improved are:
 
-+ ONVIF alarms: I have started writing some code for this already, see EventsRequest.java and compare it to how the working PTZRequest.java works, but it needs to be finished off. 
++ ONVIF alarms: I have written some code for this already, see EventsRequest.java, but it needs to be finished off to support Onvif PullMessages and posting to the special address returned from CreatePullPointSubscriptionResponse. 
 
 + PTZ methods for continuous move so you can scan back and forth. 
 

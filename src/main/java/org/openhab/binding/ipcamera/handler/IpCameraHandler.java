@@ -577,10 +577,13 @@ public class IpCameraHandler extends BaseThingHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     "Connection Timeout: Check your IP and PORT are correct and the camera can be reached.");
             restart();
+            onvifManager = new OnvifManager();
+            ptzManager = new OnvifManager();
+            eventManager = new OnvifManager();
             if (isOnline) {
+                isOnline = false; // Stop multiple errors when camera takes a while to connect.
                 logger.error("Can not connect with HTTP to the camera at {}:{} check your network for issues!",
                         ipAddress, port);
-                isOnline = false; // Stop multiple errors when camera takes a while to connect.
                 cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 8, TimeUnit.SECONDS);
             } else {
                 cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 56, TimeUnit.SECONDS);
@@ -1571,7 +1574,7 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     void bringCameraOnline() {
-
+        isOnline = true;
         // Instar needs the host IP before thing can come online.
         if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
             startStreamServer(true);
@@ -1579,7 +1582,6 @@ public class IpCameraHandler extends BaseThingHandler {
         updateStatus(ThingStatus.ONLINE);
         listOfOnlineCameraHandlers.add(this);
         listOfOnlineCameraUID.add(getThing().getUID().getId());
-        isOnline = true;
         if (cameraConnectionJob != null) {
             cameraConnectionJob.cancel(true);
             cameraConnection.shutdown();
@@ -1652,7 +1654,7 @@ public class IpCameraHandler extends BaseThingHandler {
                         snapshotUri = getCorrectUrlFormat(
                                 org.openhab.binding.ipcamera.onvif.GetSnapshotUri.getParsedResult(response.getXml()));
                         logger.debug("snapshotUri is {}", snapshotUri);
-                        cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 2, TimeUnit.SECONDS);
+                        bringCameraOnline();
                     }
                 }
 
@@ -1936,6 +1938,7 @@ public class IpCameraHandler extends BaseThingHandler {
         cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 1, 58, TimeUnit.SECONDS);
     }
 
+    // Called when camera goes offline but the main handler is not destroyed.
     private void restart() {
         onvifManager.destroy();
         ptzManager.destroy();
