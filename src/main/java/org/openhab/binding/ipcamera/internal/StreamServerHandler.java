@@ -128,9 +128,12 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             if (!ipCameraHandler.updateImageEvents.contentEquals("1")) {
                                 if (ipCameraHandler.snapshotUri != "") {
                                     ipCameraHandler.sendHttpGET(ipCameraHandler.snapshotUri);
+                                } else if (ipCameraHandler.ffmpegSnapshotGeneration) {
+                                    logger.warn(
+                                            "Snpahsot was requested but the updateImageNow channel is OFF and hence FFmpeg is not creating snapshots.");
                                 }
                                 if (ipCameraHandler.currentSnapshot.length == 1) {// no jpg received from camera.
-                                    logger.debug("No jpg in ram to send");
+                                    logger.warn("No jpg in ram to send");
                                     break;
                                 }
                             }

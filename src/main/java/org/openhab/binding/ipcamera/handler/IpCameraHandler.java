@@ -288,7 +288,8 @@ public class IpCameraHandler extends BaseThingHandler {
             }
         } catch (MalformedURLException e) {
             if (!longUrl.equals("ffmpeg")) {
-                logger.error("A non valid url was given to the binding {}", longUrl);
+                logger.error("A non valid url has been given to the binding, it is: {}", longUrl);
+                return "";
             }
         }
         return temp;
@@ -576,10 +577,7 @@ public class IpCameraHandler extends BaseThingHandler {
         if (!chFuture.isSuccess()) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     "Connection Timeout: Check your IP and PORT are correct and the camera can be reached.");
-            restart();
-            onvifManager = new OnvifManager();
-            ptzManager = new OnvifManager();
-            eventManager = new OnvifManager();
+            resetConnection();
             if (isOnline) {
                 isOnline = false; // Stop multiple errors when camera takes a while to connect.
                 logger.error("Can not connect with HTTP to the camera at {}:{} check your network for issues!",
@@ -1653,7 +1651,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (response.request().toString().contains("org.openhab.binding.ipcamera.onvif.GetSnapshotUri")) {
                         snapshotUri = getCorrectUrlFormat(
                                 org.openhab.binding.ipcamera.onvif.GetSnapshotUri.getParsedResult(response.getXml()));
-                        logger.debug("snapshotUri is {}", snapshotUri);
+                        logger.debug("snapshotUri is:{}", snapshotUri);
                         bringCameraOnline();
                     }
                 }
@@ -1936,6 +1934,14 @@ public class IpCameraHandler extends BaseThingHandler {
                     "The Image channel is set to update more often than 8 seconds. This is not recommended. The Image channel is best used only for higher poll times. See the readme file on how to display the cameras picture for best results or use a higher poll time.");
         }
         cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 1, 58, TimeUnit.SECONDS);
+    }
+
+    // What the camera needs to re-connect cleanly after a network drop out.
+    private void resetConnection() {
+        restart();
+        onvifManager = new OnvifManager();
+        ptzManager = new OnvifManager();
+        eventManager = new OnvifManager();
     }
 
     // Called when camera goes offline but the main handler is not destroyed.

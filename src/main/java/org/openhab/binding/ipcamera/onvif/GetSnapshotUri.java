@@ -14,6 +14,8 @@
 package org.openhab.binding.ipcamera.onvif;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import be.teletask.onvif.models.OnvifMediaProfile;
 import be.teletask.onvif.models.OnvifType;
@@ -27,7 +29,7 @@ import be.teletask.onvif.requests.OnvifRequest;
 
 @NonNullByDefault
 public class GetSnapshotUri implements OnvifRequest {
-
+    public final Logger logger = LoggerFactory.getLogger(getClass());
     String profileToken = "1";
 
     public GetSnapshotUri() {
@@ -40,7 +42,7 @@ public class GetSnapshotUri implements OnvifRequest {
 
     @Override
     public String getXml() {
-        return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\"><ProfileToken>" + profileToken
+        return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver10/media/wsdl\"><ProfileToken>" + profileToken
                 + "</ProfileToken></GetSnapshotUri>";
     }
 
@@ -50,12 +52,12 @@ public class GetSnapshotUri implements OnvifRequest {
     }
 
     public static String getParsedResult(String result) {
-        int beginIndex = result.indexOf("<tt:Uri>"); // 8 char long
-        int endIndex = result.indexOf("</tt:Uri>");
+        int beginIndex = result.indexOf(":Uri>"); // 8 char long
+        int endIndex = result.indexOf("</", beginIndex);
         if (beginIndex >= 0 && endIndex >= 0) {
-            return result.substring(beginIndex + 8, endIndex);
+            return result.substring(beginIndex + 5, endIndex);
         } else {
-            return "noUri";
+            return "SnapshotUriError";
         }
     }
 }

@@ -503,7 +503,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>80</default>
 </parameter>
@@ -738,7 +738,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>80</default>
 </parameter>
@@ -986,7 +986,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>80</default>
 </parameter>
@@ -1203,7 +1203,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>80</default>
 </parameter>
@@ -1444,7 +1444,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>888</default>
 </parameter>
@@ -1686,7 +1686,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>80</default>
 </parameter>
@@ -1910,7 +1910,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="ONVIF_PORT" type="text" required="true" groupName="Settings">
 <label>ONVIF_PORT</label>
-<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement and auto discovery of rtsp and snapshot urls. Giving the wrong port will cause camera to connect faster if you manually provide the urls.
+<description>The port your camera uses for ONVIF connections. This is needed for PTZ movement, alarm events and auto discovery of RTSP and snapshot urls.
 </description>
 <default>8080</default>
 </parameter>

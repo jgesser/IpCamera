@@ -833,14 +833,14 @@ String FrontDoorCamHlsUrl "Front Door" { channel="ipcamera:ONVIF:FrontDoor:hlsUr
 To use the HLS steaming features, you need to:
 
 1. Set a valid ``SERVER_PORT`` as the default value of -1 will turn the feature off.
-2. The audio format in the cameras settings must be AAC for Chromecast to work.
+2. The audio format in the cameras settings must be AAC and not missing for Chromecast to work. The binding will default to creating a silent AAC audio track which should be used until you have a working setup.
 3. Ensure FFmpeg is installed.
 4. For cameras that do not auto detect the H264 stream which is done for ONVIF cameras, you will need to use the ``FFMPEG_INPUT`` and provide a http or rtsp link.
 This is used for HLS and many other features like the animated GIF.
 5. For Onvif cameras the ``ONVIF_MEDIA_PROFILE`` needs to match the stream number you have setup for h264. 
 This is usually 0 and is the main-stream, the higher numbers are the sub-streams if your camera has any. 
 For non Onvif cameras you just need to check the url in the last step works and is provided to the binding.
-6. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format. 
+6. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a standard resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format. 
 7. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder.
 Only a small amount of storage is needed.
 I use micro SD cards and a ramdrive and have excellent performance.
@@ -850,7 +850,7 @@ I use micro SD cards and a ramdrive and have excellent performance.
 
 To create a tmpfs of 20mb at /tmpfs/ run this command to open the file for editing. 
 Recommend using 20Mb per camera that uses this location although it could use less than half that amount if carefully streamlined for less ram.
-If using the ffmpeg ``-hls_wrap wrap`` option, you may even get away with 5Mb per camera. 
+If using the ffmpeg ``-hls_wrap wrap`` option (causes issues for my Home Hub), you may even get away with 5Mb per camera. 
 
 ```
 nano /etc/fstab
