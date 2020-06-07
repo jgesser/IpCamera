@@ -211,8 +211,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         ipCameraHandler.lockCurrentSnapshot.unlock();
                         ipCameraHandler.processSnapshot();
                     } else if (onvifEvent) {
-                        ipCameraHandler.onvifEventHandler
-                                .eventRecieved(new String(incomingJpeg, StandardCharsets.UTF_8));
+                        ipCameraHandler.onvifCamera.eventRecieved(new String(incomingJpeg, StandardCharsets.UTF_8));
                     } else {
                         if (recievedBytes > 1000) {
                             ipCameraHandler.sendMjpegFrame(incomingJpeg, ipCameraHandler.mjpegChannelGroup);

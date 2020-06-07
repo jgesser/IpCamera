@@ -25,10 +25,8 @@ import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CONFIG_IPADD
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
@@ -39,10 +37,6 @@ import org.openhab.binding.ipcamera.handler.IpCameraHandler;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import be.teletask.onvif.DiscoveryManager;
-import be.teletask.onvif.listeners.DiscoveryListener;
-import be.teletask.onvif.models.Device;
 
 /**
  * The {@link IpCameraDiscoveryService} is responsible for auto finding cameras that have Onvif
@@ -56,7 +50,7 @@ import be.teletask.onvif.models.Device;
 public class IpCameraDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
-    public @Nullable List<Device> devices2 = null;
+    // public @Nullable List<Device> devices2 = null;
     private int numberOfCameras = 0;
 
     public IpCameraDiscoveryService() {
@@ -112,29 +106,6 @@ public class IpCameraDiscoveryService extends AbstractDiscoveryService {
 
     private void findCameras() {
 
-        DiscoveryManager manager = new DiscoveryManager();
-        manager.setDiscoveryTimeout(10000);
-        manager.discover(new DiscoveryListener() {
-
-            @Override
-            public void onDiscoveryStarted() {
-                logger.info("IpCameraDiscovery started");
-            }
-
-            @Override
-            public void onDevicesFound(List<Device> devices) {
-                for (Device device : devices) {
-                    logger.info("Device found Hostname:{}", device.getHostName());
-                    try {
-                        String brand;
-                        brand = getCameraBrand(device.getHostName());
-                        newCameraFound(brand, device.getHostName());
-                    } catch (IOException e) {
-                        logger.debug("Error trying to fetch cameras login page:{}", e);
-                    }
-                }
-            }
-        });
     }
 
     @Override
