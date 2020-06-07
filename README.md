@@ -160,11 +160,12 @@ Be sure to update to the latest firmware for your camera as Instar have made a l
 
 ## Installing the binding and Discovery
 
-Installing the binding is as simple as dropping all the JAR files from inside the ZIP into the addons folder and restarting Openhab at least 2 times for the cache to be created. 
-Ignore any errors until multiple restarts are made. 
+Installing the binding is as simple as first stopping Openhab from running (very important to stop it first) and then drop all the JAR files from inside the ZIP, into the ``addons`` folder. 
+Ignore any errors until multiple restarts to Openhab are made, this is to allow the cache to be created.
+
 You do not use PaperUI to install this binding as it is not yet merged.
 
-Auto discovery can be used, however I would recommend using textual configuration which is covered below in more detail. 
+Auto discovery can be used, however I would recommend using textual configuration which is covered below in more detail.
 Textual config should be preferred whilst the binding is under going a lot of changes as the channels and config items appear to be stored in a database and are not checked to be correct by the Openhab framework. 
 If you use auto discovery or manually add a camera with PaperUI, it may/will be required to delete the camera and re-add it for the DB to be refreshed with the correct data.
 Only a THING file is needed to make changing versions far easier, the rest can be done via paperUI if you wish instead of ITEM files.
@@ -1209,7 +1210,7 @@ You can specify the item name in the filter to remove just 1 camera, or you can 
 
 ## Roadmap for further development
 
-Currently the focus is on creating a stable framework that allows multiple brands to be used in a consistent way. 
+Currently the focus is on creating a stable framework that allows all brands to be used in a consistent way, over loads of features that most users wont use. 
 Sharing rules with others will become easier if all brands are handled the same way and with channels that have the same name.
 
 If you need a feature added that is in an API and you can not program, please raise an issue ticket at Github with a sample of what a browser shows when you enter in the URL, it is usually very quick to add features.
@@ -1223,13 +1224,15 @@ Any feedback, push requests and ideas are welcome, just please create a Github i
 
 Areas the binding could be improved are:
 
-+ ONVIF alarms: I have written some code for this already, see EventsRequest.java, but it needs to be finished off to support Onvif PullMessages and posting to the special address returned from CreatePullPointSubscriptionResponse. 
++ Taking care of any build errors to get the binding ready for merging into the main project.
+
++ Fixing any text that is confusing in log output or in the User Interfaces.
 
 + PTZ methods for continuous move so you can scan back and forth. 
 
-+ 1 and 2 way audio. Keen to add this at some point for talking with people at my front door and baby monitor uses.
++ 1 and 2 way audio. Keen to add this at some point for talking with people at my front door and baby monitor uses. Most likely only a few select brands of camera that have an API for doing this will get the ability.
 
 
-Example Onvif SOAP contents can be found here for most requests and responses.
-I have found these useful as often example SOAP traces are not in the Onvif documentation.
+If you do wish to implement more Onvif features, I have found some example SOAP contents found here to be useful for most requests and responses.
+Often example SOAP traces are not in the Onvif documentation.
 <https://git.linuxmce.org/garagevibes/linuxmce/tree/08c52739954c0bfce7443eddc1ad4f6936a70fbe/src/Advanced_IP_Camera/onvif>
