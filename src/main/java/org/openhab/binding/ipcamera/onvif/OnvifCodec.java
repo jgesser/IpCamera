@@ -50,6 +50,7 @@ public class OnvifCodec extends ChannelDuplexHandler {
             }
             if (msg instanceof LastHttpContent) {
                 onvifConnection.processReply(incomingMessage);
+                incomingMessage = "";
             }
         } finally {
             ReferenceCountUtil.release(msg);

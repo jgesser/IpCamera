@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -66,11 +67,11 @@ import io.netty.handler.timeout.IdleStateHandler;
 @NonNullByDefault
 public class OnvifConnection extends ChannelDuplexHandler {
     @Nullable
-    private Bootstrap bootstrap;
-    private EventLoopGroup mainEventLoopGroup = new NioEventLoopGroup();
-    private String ipAddress = "";
-    private String user = "";
-    private String password = "";
+    Bootstrap bootstrap;
+    EventLoopGroup mainEventLoopGroup = new NioEventLoopGroup();
+    String ipAddress = "";
+    String user = "";
+    String password = "";
     int onvifPort = 80;
     String deviceXAddr = "/onvif/device_service";
     String eventXAddr = "/onvif/device_service";
@@ -79,10 +80,12 @@ public class OnvifConnection extends ChannelDuplexHandler {
     String ptzXAddr = "/onvif/ptz_service";
     String subscriptionXAddr = "/onvif/device_service";
     boolean isConnected = false;
-    String profileToken = "000";
-    public String snapshotUri = "";
-    public String rtspUri = "";
+    int mediaProfileIndex = 0;
+    String snapshotUri = "";
+    String rtspUri = "";
     IpCameraHandler ipCameraHandler;
+    boolean useEvents = false;
+    boolean pullMessagesWorking = false;
 
     // These hold the cameras PTZ position in the range that the camera uses, ie
     // mine is -1 to +1
@@ -103,6 +106,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
     public String ptzConfigToken = "000";
     int presetTokenIndex = 0;
     LinkedList<String> presetTokens = new LinkedList<String>();
+    LinkedList<String> mediaProfileTokens = new LinkedList<String>();
     boolean ptzDevice = true;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -115,12 +119,23 @@ public class OnvifConnection extends ChannelDuplexHandler {
         }
     }
 
+    // TODO: Some cameras may need to poll the messages, this gives the beginning of that support.
+    public boolean isEventRunning() {
+        if (pullMessagesWorking) {
+            pullMessagesWorking = false;
+            return true;
+        } else {
+            sendEventRequest("PullMessages");
+        }
+        return false;
+    }
+
     String getXml(String requestType) {
         switch (requestType) {
             case "AbsoluteMove":
-                return "<AbsoluteMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>" + profileToken
-                        + "</ProfileToken><Position><PanTilt x=\"" + currentPanCamValue + "\" y=\""
-                        + currentTiltCamValue
+                return "<AbsoluteMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken><Position><PanTilt x=\""
+                        + currentPanCamValue + "\" y=\"" + currentTiltCamValue
                         + "\" space=\"http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace\">\n"
                         + "</PanTilt>\n" + "<Zoom x=\"" + currentZoomCamValue
                         + "\" space=\"http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace\">\n"
@@ -129,8 +144,8 @@ public class OnvifConnection extends ChannelDuplexHandler {
                         + "</Speed></AbsoluteMove>";
             case "AddPTZConfiguration": // not tested to work yet
                 return "<AddPTZConfiguration xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
-                        + profileToken + "</ProfileToken><ConfigurationToken>" + ptzConfigToken
-                        + "</ConfigurationToken></AddPTZConfiguration>";
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken><ConfigurationToken>"
+                        + ptzConfigToken + "</ConfigurationToken></AddPTZConfiguration>";
             case "CreatePullPointSubscription":
                 return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT600S</InitialTerminationTime></CreatePullPointSubscription>";
 
@@ -142,11 +157,11 @@ public class OnvifConnection extends ChannelDuplexHandler {
             case "GetProfiles":
                 return "<GetProfiles xmlns=\"http://www.onvif.org/ver10/media/wsdl\"/>";
             case "GetSnapshotUri":
-                return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver10/media/wsdl\"><ProfileToken>" + profileToken
-                        + "</ProfileToken></GetSnapshotUri>";
+                return "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver10/media/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken></GetSnapshotUri>";
             case "GetStreamUri":
                 return "<GetStreamUri xmlns=\"http://www.onvif.org/ver10/media/wsdl\"><StreamSetup><Stream xmlns=\"http://www.onvif.org/ver10/schema\">RTP-Unicast</Stream><Transport xmlns=\"http://www.onvif.org/ver10/schema\"><Protocol>RTSP</Protocol></Transport></StreamSetup><ProfileToken>"
-                        + profileToken + "</ProfileToken></GetStreamUri>";
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken></GetStreamUri>";
             case "GetSystemDateAndTime":
                 return "<GetSystemDateAndTime xmlns=\"http://www.onvif.org/ver10/device/wsdl\"/>";
             case "Subscribe":
@@ -156,7 +171,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
             case "Unsubscribe":// not tested
                 return "<Unsubscribe xmlns=\"http://docs.oasis-open.org/wsn/b-2/\"></Unsubscribe>";
             case "PullMessages":
-                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT1M</Timeout><MessageLimit>2</MessageLimit></PullMessages>";
+                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT1M</Timeout><MessageLimit>1024</MessageLimit></PullMessages>";
             case "GetEventProperties":
                 return "<GetEventProperties xmlns=\"http://www.onvif.org/ver10/events/wsdl\"/>";
             case "GetConfigurations":
@@ -174,52 +189,53 @@ public class OnvifConnection extends ChannelDuplexHandler {
             case "GetNodes":
                 return "<GetNodes xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"></GetNodes>";
             case "GetStatus":
-                return "<GetStatus xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>" + profileToken
-                        + "</ProfileToken></GetStatus>";
+                return "<GetStatus xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken></GetStatus>";
             case "GotoPreset":
-                return "<GotoPreset xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>" + profileToken
-                        + "</ProfileToken><PresetToken>" + presetTokens.get(presetTokenIndex)
+                return "<GotoPreset xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken><PresetToken>"
+                        + presetTokens.get(presetTokenIndex)
                         + "</PresetToken><Speed><PanTilt x=\"0.0\" y=\"0.0\" space=\"\"></PanTilt><Zoom x=\"0.0\" space=\"\"></Zoom></Speed></GotoPreset>";
             case "GetPresets":
-                return "<GetPresets xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>" + profileToken
-                        + "</ProfileToken></GetPresets>";
-
+                return "<GetPresets xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken></GetPresets>";
         }
         return "notfound";
     }
 
     public void processReply(String message) {
-        logger.debug("Onvif reply is:{}", message);
+        logger.trace("Onvif reply is:{}", message);
         if (message.contains("GetSystemDateAndTimeResponse")) {// 1st to be sent.
             sendOnvifRequest(requestBuilder("GetCapabilities", deviceXAddr));
-            // parseDateAndTime(message);
-            // logger.debug(getUTCdateTime());
+            parseDateAndTime(message);
+            logger.debug("Openhabs UTC dateTime is:{}", getUTCdateTime());
         } else if (message.contains("GetEventPropertiesResponse")) {
             sendOnvifRequest(requestBuilder("CreatePullPointSubscription", eventXAddr));
             sendOnvifRequest(requestBuilder("Subscribe", eventXAddr));
-            // sendOnvifRequest(requestBuilder("Subscribe", deviceXAddr));
         } else if (message.contains("SubscribeResponse")) {
             logger.info("Onvif Subscribe appears to be working for Alarms/Events.");
         } else if (message.contains("CreatePullPointSubscriptionResponse")) {
             subscriptionXAddr = removeIPfromUrl(fetchXML(message, "SubscriptionReference>", "Address>"));
+            logger.debug("subscriptionXAddr={}", subscriptionXAddr);
             sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
         } else if (message.contains("PullMessagesResponse")) {
             eventRecieved(message);
+            pullMessagesWorking = true;
         } else if (message.contains("GetProfilesResponse")) {// 3rd to be sent.
-            // todo // parse the token correctly so we can change it via the config option!
-            profileToken = fetchXML(message, "GetProfilesResponse>", "token=\"");
-            logger.info("Media Profile token recieved:{}", profileToken);
+            parseProfiles(message);
             isConnected = true;
             sendOnvifRequest(requestBuilder("GetSnapshotUri", mediaXAddr));
             sendOnvifRequest(requestBuilder("GetStreamUri", mediaXAddr));
-            sendOnvifRequest(requestBuilder("GetEventProperties", eventXAddr));
             sendPTZRequest("GetNodes");
+            if (useEvents) {// stops API cameras from getting sent ONVIF events.
+                sendOnvifRequest(requestBuilder("GetEventProperties", eventXAddr));
+            }
         } else if (message.contains("GetStatusResponse")) {
-            logger.debug("GetStatusResponse recieved");
+            // logger.debug("GetStatusResponse recieved");
             processPTZLocation(message);
         } else if (message.contains("GetPresetsResponse")) {
-            logger.debug("GetPresetsResponse recieved");
-            presetTokens = listOfResults(message, "Preset token=\"");
+            // logger.debug("GetPresetsResponse recieved");
+            presetTokens = listOfResults(message, "<tptz:Preset", "token=\"");
         } else if (message.contains("GetConfigurationsResponse")) {
             sendPTZRequest("GetPresets");
             ptzConfigToken = fetchXML(message, "PTZConfiguration", "token=\"");
@@ -248,7 +264,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
                 ipCameraHandler.rtspUri = rtspUri;
             }
         } else {
-            logger.trace("Unhandled Onvif reply is:{}", message);
+            logger.debug("Unhandled Onvif reply is:{}", message);
         }
     }
 
@@ -259,14 +275,23 @@ public class OnvifConnection extends ChannelDuplexHandler {
             String nonce = createNonce();
             String dateTime = getUTCdateTime();
             String digest = createDigest(nonce, dateTime);
-            security = "<s:Header><Security s:mustUnderstand=\"1\" xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><UsernameToken><Username>"
+            security = "<Security s:mustUnderstand=\"1\" xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><UsernameToken><Username>"
                     + user
                     + "</Username><Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest\">"
                     + digest
                     + "</Password><Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">"
                     + encodeBase64(nonce)
                     + "</Nonce><Created xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">"
-                    + dateTime + "</Created></UsernameToken></Security></s:Header>";
+                    + dateTime + "</Created></UsernameToken></Security>";
+        }
+        String headers = "<s:Header>" + security + "</s:Header>";
+        if (requestType.equals("PullMessages")) {
+            headers = "<s:Header>"
+                    + "<a:Action s:mustUnderstand=\"1\">http://www.onvif.org/ver10/events/wsdl/PullPointSubscription/PullMessagesRequest</a:Action><a:MessageID>urn:uuid:"
+                    + UUID.randomUUID().toString()
+                    + "</a:MessageID><a:ReplyTo><a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address></a:ReplyTo>"
+                    + security + "<a:To s:mustUnderstand=\"1\">http://" + ipAddress + subscriptionXAddr + "</a:To>"
+                    + "</s:Header>";
         }
 
         FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("POST"), xAddr);
@@ -274,40 +299,13 @@ public class OnvifConnection extends ChannelDuplexHandler {
         request.headers().set(HttpHeaderNames.HOST, ipAddress + ":" + onvifPort);
         request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, "gzip, deflate");
-        String body = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">" + security
+        String fullXml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">" + headers
                 + "<s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">"
                 + getXml(requestType) + "</s:Body></s:Envelope>";
-        ByteBuf bbuf = Unpooled.copiedBuffer(body, StandardCharsets.UTF_8);
+        ByteBuf bbuf = Unpooled.copiedBuffer(fullXml, StandardCharsets.UTF_8);
         request.headers().set(HttpHeaderNames.CONTENT_LENGTH, bbuf.readableBytes());
         request.content().clear().writeBytes(bbuf);
         return request;
-    }
-
-    String fetchXML(String message, String sectionHeading, String key) {
-        String result = "";
-        int sectionHeaderBeginning = 0;
-        if (!sectionHeading.equals("")) {// looking for a sectionHeading
-            sectionHeaderBeginning = message.indexOf(sectionHeading);
-        }
-        if (sectionHeaderBeginning == -1) {
-            logger.warn("{} was not found in :{}", sectionHeading, message);
-            return "";
-        }
-        int startIndex = message.indexOf(key, sectionHeaderBeginning + sectionHeading.length());
-        if (startIndex == -1) {
-            logger.warn("{} was not found in :{}", key, message);
-            return "";
-        }
-        int endIndex = message.indexOf("<", startIndex + key.length());
-        if (endIndex > startIndex) {
-            result = message.substring(startIndex + key.length(), endIndex);
-        }
-        // remove any quotes and anything after the quote.
-        sectionHeaderBeginning = result.indexOf("\"");
-        if (sectionHeaderBeginning > 0) {
-            result = result.substring(0, sectionHeaderBeginning);
-        }
-        return result;
     }
 
     String removeIPfromUrl(String url) {
@@ -316,7 +314,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
             index = url.indexOf("/", index + ipAddress.length());
         }
         if (index == -1) {
-            logger.warn("We hit an issue parsing url:{}", url);
+            logger.debug("We hit an issue parsing url:{}", url);
             return "";
         }
         return url.substring(index);
@@ -332,7 +330,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
         ptzXAddr = removeIPfromUrl(fetchXML(message, "<tt:PTZ>", "<tt:XAddr>"));
         if (ptzXAddr == "") {
             ptzDevice = false;
-            logger.debug("Camera must not support PTZ, it failed to give a <tt:PTZ><tt:XAddr>:{}", message);
+            logger.trace("Camera must not support PTZ, it failed to give a <tt:PTZ><tt:XAddr>:{}", message);
         } else {
             logger.debug("ptzXAddr:{}", ptzXAddr);
         }
@@ -342,11 +340,11 @@ public class OnvifConnection extends ChannelDuplexHandler {
         String minute = fetchXML(message, "UTCDateTime", "Minute>");
         String hour = fetchXML(message, "UTCDateTime", "Hour>");
         String second = fetchXML(message, "UTCDateTime", "Second>");
-        logger.info("The time is {}:{}:{}", hour, minute, second);
+        logger.debug("Cameras  UTC time is : {}:{}:{}", hour, minute, second);
         String day = fetchXML(message, "UTCDateTime", "Day>");
         String month = fetchXML(message, "UTCDateTime", "Month>");
         String year = fetchXML(message, "UTCDateTime", "Year>");
-        logger.debug("The date is {}-{}-{}", day, month, year);
+        logger.debug("Cameras  UTC date is : {}-{}-{}", year, month, day);
     }
 
     private String getUTCdateTime() {
@@ -403,7 +401,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
         ChannelFuture chFuture = bootstrap.connect(new InetSocketAddress(ipAddress, onvifPort));
         chFuture.awaitUninterruptibly(); // ChannelOption.CONNECT_TIMEOUT_MILLIS means this will not hang here
         if (!chFuture.isSuccess()) {
-            logger.warn("Camera is not reachable on ONVIF port:{} or the port may be wrong.", onvifPort);
+            logger.debug("Camera is not reachable on ONVIF port:{} or the port may be wrong.", onvifPort);
         }
         Channel ch = chFuture.channel();
         ch.writeAndFlush(request);
@@ -425,32 +423,14 @@ public class OnvifConnection extends ChannelDuplexHandler {
             onvifPort = Integer.parseInt(url.substring(beginIndex + 1, endIndex));
         } else {// 192.168.1.1
             ipAddress = url;
-            logger.info("No Onvif Port found when parsing:{}", url);
+            logger.warn("No Onvif Port found when parsing:{}", url);
         }
-    }
-
-    LinkedList<String> listOfResults(String search, String toFind) {
-        LinkedList<String> results = new LinkedList<String>();
-        for (int beginIndex = 0, endIndex = 0; beginIndex != -1;) {
-            beginIndex = search.indexOf(toFind, beginIndex);
-            if (beginIndex >= 0) {
-                endIndex = search.indexOf("\"", (beginIndex + toFind.length()));
-                if (endIndex >= 0) {
-                    logger.debug("String was found:{}", search.substring(beginIndex + toFind.length(), endIndex));
-                    results.add(search.substring(beginIndex + toFind.length(), endIndex));
-                }
-                ++beginIndex;
-            } else {
-                logger.debug("no more to find");
-            }
-        }
-        return results;
     }
 
     public void gotoPreset(int index) {
         if (index > 0) {// 0 is reserved for HOME as cameras seem to start at preset 1.
             if (presetTokens.isEmpty()) {
-                logger.warn("Camera did not report any presets to the binding");
+                logger.warn("Camera did not report any ONVIF preset locations to the binding");
             } else {
                 presetTokenIndex = index - 1;
                 sendPTZRequest("GotoPreset");
@@ -458,12 +438,8 @@ public class OnvifConnection extends ChannelDuplexHandler {
         }
     }
 
-    public void setSelectedMediaProfile(int mediaProfileIndex) {
-        profileToken = "" + mediaProfileIndex;
-    }
-
     public void eventRecieved(String eventMessage) {
-        logger.trace("Onvif eventRecieved : {}", eventMessage);
+        logger.debug("Onvif eventRecieved : {}", eventMessage);
         if (eventMessage.contains("Name=\"IsMotion\" Value=\"true\"")) {
             ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
         } else if (eventMessage.contains("Name=\"IsMotion\" Value=\"false\"")) {
@@ -478,8 +454,9 @@ public class OnvifConnection extends ChannelDuplexHandler {
         }
     }
 
-    public void connect() {
+    public void connect(boolean useEvents) {
         sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
+        this.useEvents = useEvents;
         // sendOnvifRequest(requestBuilder("GetDeviceInformation", deviceXAddr));
     }
 
@@ -489,6 +466,8 @@ public class OnvifConnection extends ChannelDuplexHandler {
 
     public void disconnect() {
         isConnected = false;
+        presetTokens.clear();
+        mediaProfileTokens.clear();
     }
 
     public boolean supportsPTZ() {
@@ -536,8 +515,67 @@ public class OnvifConnection extends ChannelDuplexHandler {
         sendPTZRequest("AbsoluteMove");
     }
 
+    public void setSelectedMediaProfile(int mediaProfileIndex) {
+        this.mediaProfileIndex = mediaProfileIndex;
+    }
+
+    LinkedList<String> listOfResults(String message, String heading, String key) {
+        LinkedList<String> results = new LinkedList<String>();
+        String temp = "";
+        for (int startLookingFromIndex = 0; startLookingFromIndex != -1;) {
+            startLookingFromIndex = message.indexOf(heading, startLookingFromIndex);
+            if (startLookingFromIndex >= 0) {
+                temp = fetchXML(message.substring(startLookingFromIndex), heading, key);
+                if (!temp.equals("")) {
+                    logger.trace("String was found:{}", temp);
+                    results.add(temp);
+                    ++startLookingFromIndex;
+                }
+            } else {
+                logger.trace("no more to find");
+            }
+        }
+        return results;
+    }
+
+    String fetchXML(String message, String sectionHeading, String key) {
+        String result = "";
+        int sectionHeaderBeginning = 0;
+        if (!sectionHeading.equals("")) {// looking for a sectionHeading
+            sectionHeaderBeginning = message.indexOf(sectionHeading);
+        }
+        if (sectionHeaderBeginning == -1) {
+            logger.debug("{} was not found in :{}", sectionHeading, message);
+            return "";
+        }
+        int startIndex = message.indexOf(key, sectionHeaderBeginning + sectionHeading.length());
+        if (startIndex == -1) {
+            logger.debug("{} was not found in :{}", key, message);
+            return "";
+        }
+        int endIndex = message.indexOf("<", startIndex + key.length());
+        if (endIndex > startIndex) {
+            result = message.substring(startIndex + key.length(), endIndex);
+        }
+        // remove any quotes and anything after the quote.
+        sectionHeaderBeginning = result.indexOf("\"");
+        if (sectionHeaderBeginning > 0) {
+            result = result.substring(0, sectionHeaderBeginning);
+        }
+        return result;
+    }
+
+    void parseProfiles(String message) {
+        mediaProfileTokens = listOfResults(message, "<trt:Profiles", "token=\"");
+        if (mediaProfileIndex >= mediaProfileTokens.size()) {
+            logger.error("You have set the media profile to {} when the camera reported {} profiles.",
+                    mediaProfileIndex, mediaProfileTokens.size());
+            mediaProfileIndex = 0;
+        }
+    }
+
     void processPTZLocation(String result) {
-        logger.debug("Process new PTZ location now");
+        logger.debug("Processing new PTZ location now");
 
         int beginIndex = result.indexOf("x=\"");
         int endIndex = result.indexOf("\"", (beginIndex + 3));

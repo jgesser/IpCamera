@@ -11,22 +11,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-/**
- * The {@link IpCameraDiscoveryService} is responsible for finding globes
- * and setting them up for the handlers.
- *
- * @author Matthew Skinner - Initial contribution
- */
-
 package org.openhab.binding.ipcamera.internal;
 
-import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CONFIG_IPADDRESS;
+import static org.openhab.binding.ipcamera.IpCameraBindingConstants.*;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.UnknownHostException;
 
-import org.apache.commons.io.IOUtils;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
@@ -34,6 +25,7 @@ import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.ipcamera.handler.IpCameraHandler;
+import org.openhab.binding.ipcamera.onvif.OnvifDiscovery;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +36,11 @@ import org.slf4j.LoggerFactory;
  * @author Matthew Skinner - Initial contribution
  */
 
-// @NonNullByDefault
-@SuppressWarnings("null")
+@NonNullByDefault
 @Component(service = DiscoveryService.class, immediate = true, configurationPid = "binding.ipcamera")
 public class IpCameraDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
-    // public @Nullable List<Device> devices2 = null;
-    private int numberOfCameras = 0;
 
     public IpCameraDiscoveryService() {
         super(IpCameraHandler.SUPPORTED_THING_TYPES, 30, false);
@@ -60,58 +49,35 @@ public class IpCameraDiscoveryService extends AbstractDiscoveryService {
     @Override
     protected void startBackgroundDiscovery() {
 
-    };
+    }
 
     @Override
     protected void deactivate() {
         super.deactivate();
     }
 
-    private String getCameraBrand(String hostname) throws IOException {
-        URL url = new URL(hostname);
-        URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(2000);
-        connection.setReadTimeout(2000);
-        try {
-            connection.connect();
-            logger.debug("Getting stream now");
-            String response = IOUtils.toString(connection.getInputStream());
-            logger.trace("Camera response:{}", response);
-            if (response.contains("amcrest")) {
-                return "DAHUA";
-            } else if (response.contains("dahua")) {
-                return "DAHUA";
-            } else if (response.contains("foscam")) {
-                return "FOSCAM";
-            } else if (response.contains("/doc/page/login.asp")) {
-                return "HIKVISION";
-            } else if (response.contains("instar")) {
-                return "INSTAR";
-            }
-            return "ONVIF";// generic camera
-        } finally {
-            logger.debug("Closing inputstream now");
-            IOUtils.closeQuietly(connection.getInputStream());
-        }
+    public void log(String message) {
+        logger.info(message);
     }
 
-    private void newCameraFound(String brand, String hostname) {
+    public void newCameraFound(String brand, String hostname, int onvifPort) {
         ThingTypeUID thingtypeuid = new ThingTypeUID("ipcamera", brand);
-        ThingUID thingUID = new ThingUID(thingtypeuid, "Camera" + ++numberOfCameras);
+        ThingUID thingUID = new ThingUID(thingtypeuid, hostname.replace(".", ""));
         DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID)
-                .withProperty(CONFIG_IPADDRESS, hostname.substring(7))
-                .withLabel(brand + " Camera" + numberOfCameras + " @ " + hostname.substring(7)).build();
+                .withProperty(CONFIG_IPADDRESS, hostname).withProperty(CONFIG_ONVIF_PORT, onvifPort)
+                .withLabel(brand + " Camera @" + hostname).build();
         thingDiscovered(discoveryResult);
-    }
-
-    private void findCameras() {
-
     }
 
     @Override
     protected void startScan() {
         removeOlderResults(getTimestampOfLastScan());
-        numberOfCameras = 0;
-        findCameras();
+        OnvifDiscovery onvifDiscovery = new OnvifDiscovery(this);
+        try {
+            onvifDiscovery.discoverCameras();
+        } catch (UnknownHostException | InterruptedException e) {
+            logger.error(
+                    "IpCamera Discovery has an issue discovering the network setting to find cameras with. Setup camera manually.");
+        }
     }
 }

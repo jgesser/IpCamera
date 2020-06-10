@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -503,7 +504,6 @@ public class IpCameraHandler extends BaseThingHandler {
 
         if (useDigestAuth) {
             if (digestString != null) {
-                // logger.debug("Resending using a fresh DIGEST \tURL:{}", httpRequestURL);
                 request.headers().set(HttpHeaderNames.AUTHORIZATION, "Digest " + digestString);
             }
         }
@@ -529,11 +529,7 @@ public class IpCameraHandler extends BaseThingHandler {
                                 ch.writeAndFlush(request);
                                 request = null;
                                 return true;
-                            } else {
-                                // logger.debug("!!!! Closed Channel was marked as open, channel:{} \t{}:{}", index,
-                                // httpMethod, httpRequestURL);
                             }
-
                         case -1: // Closed
                             indexInLists = index;
                             listOfChStatus.set(indexInLists, (byte) 1);
@@ -563,7 +559,7 @@ public class IpCameraHandler extends BaseThingHandler {
                         ipAddress, port);
                 cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 8, TimeUnit.SECONDS);
             } else {
-                cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 56, TimeUnit.SECONDS);
+                cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
             }
             return false;
         }
@@ -1348,7 +1344,6 @@ public class IpCameraHandler extends BaseThingHandler {
     @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // logger.info("command {}:{}", channelUID, command);
         if (command.toString() == "REFRESH") {
             switch (channelUID.getId()) {
                 case CHANNEL_PAN:
@@ -1411,7 +1406,6 @@ public class IpCameraHandler extends BaseThingHandler {
                     } else {
                         if (ffmpegHLS != null) {
                             ffmpegHLS.setKeepAlive(1);
-                            // ffmpegHLS.stopConverting();
                         }
                     }
                     return;
@@ -1610,52 +1604,10 @@ public class IpCameraHandler extends BaseThingHandler {
                 return;
             }
 
-            /*
-             * @Override
-             * public void onResponse(@Nullable OnvifDevice thisOnvifCamera, @Nullable OnvifResponse response) {
-             * if (response == null) {
-             * return;
-             * }
-             * logger.trace("We got an ONVIF response:{}", response.getXml());
-             * if (response.request().toString().contains("org.openhab.binding.ipcamera.onvif.GetSnapshotUri")) {
-             * snapshotUri = getCorrectUrlFormat(
-             * org.openhab.binding.ipcamera.onvif.GetSnapshotUri.getParsedResult(response.getXml()));
-             * logger.debug("snapshotUri is:{}", snapshotUri);
-             * bringCameraOnline();
-             * }
-             * if (selectedMediaProfile >= mediaProfiles.size()) {
-             * logger.warn(
-             * "The selected Media Profile in the binding is higher than the max reported profiles. Changing to use Media Profile 0."
-             * );
-             * selectedMediaProfile = 0;
-             * }
-             * public void onMediaStreamURIReceived(@Nullable OnvifDevice device,
-             *
-             * @Nullable OnvifMediaProfile profile, @Nullable String uri) {
-             * if (uri != null) {
-             * logger.debug("RTSP url auto discovered");
-             * rtspUri = uri;
-             * if (ffmpegSnapshotGeneration) {
-             * setupFfmpegFormat("SNAPSHOT");
-             * updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
-             * updateState(CHANNEL_RTSP_URL, new StringType(rtspUri));
-             * }
-             * if (snapshotUri.equals("")) {// && !ffmpegSnapshotGeneration) {
-             * logger.debug("Trying to find snapshot url.");
-             * onvifManager.sendOnvifRequest(thisOnvifCamera,
-             * new GetSnapshotUri(mediaProfiles.get(selectedMediaProfile)));
-             * }
-             *
-             * if (thing.getThingTypeUID().getId().equals("ONVIF")) {
-             * if (thisOnvifCamera != null) {
-             * onvifEventHandler = new EventsRequest(eventManager, thisOnvifCamera,
-             * paths.getDeviceInformationPath(), getHandle());
-             */
-
             if (!onvifCamera.isConnected()) {
-                logger.info("About to connect to the IP Camera using the ONVIF PORT at IP:{}:{}", ipAddress,
+                logger.debug("About to connect to the IP Camera using the ONVIF PORT at IP:{}:{}", ipAddress,
                         config.get(CONFIG_ONVIF_PORT).toString());
-                onvifCamera.connect();
+                onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
             }
 
             if (snapshotUri.equals("ffmpeg")) {
@@ -1856,11 +1808,12 @@ public class IpCameraHandler extends BaseThingHandler {
         if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
             startStreamServer(true);
         }
-
-        onvifCamera = new OnvifConnection(this, ipAddress + ":" + config.get(CONFIG_ONVIF_PORT).toString(), username,
-                password);
-        onvifCamera.setSelectedMediaProfile(selectedMediaProfile);
-        onvifCamera.connect();
+        BigDecimal test = new BigDecimal(config.get(CONFIG_ONVIF_PORT).toString());
+        if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
+            onvifCamera = new OnvifConnection(this, ipAddress + ":" + test.intValue(), username, password);
+            onvifCamera.setSelectedMediaProfile(selectedMediaProfile);
+            onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
+        }
 
         // for poll times above 5 seconds don't display a warning about the Image channel.
         if (9000 <= Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()) && updateImageChannel) {
@@ -1874,7 +1827,7 @@ public class IpCameraHandler extends BaseThingHandler {
     // What the camera needs to re-connect cleanly after a network drop out.
     private void resetConnection() {
         restart();
-        onvifCamera.connect();
+        onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
     }
 
     // Called when camera goes offline but the main handler is not destroyed.
@@ -1902,9 +1855,7 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         basicAuth = ""; // clear out stored password hash
         useDigestAuth = false;
-        // firstStreamedMsg = null;
         startStreamServer(false);
-
         closeAllChannels();
 
         if (ffmpegHLS != null) {
