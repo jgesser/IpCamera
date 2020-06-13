@@ -57,12 +57,10 @@ public class HikvisionHandler extends ChannelDuplexHandler {
         int debounce = 3;
         try {
             content = msg.toString();
-            if (!content.isEmpty()) {
-                ipCameraHandler.logger.trace("HTTP Result back from camera is \t:{}:", content);
-            } else {
+            if (content.isEmpty()) {
                 return;
             }
-
+            ipCameraHandler.logger.trace("HTTP Result back from camera is \t:{}:", content);
             // Alarm checking goes in here//
             if (content.contains("<EventNotificationAlert version=\"")) {
                 if (content.contains("hannelID>" + nvrChannel + "</")) {// some camera use c or <dynChannelID>
@@ -97,18 +95,12 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                     }
                     if (content.contains("<eventType>videoloss</eventType>\r\n<eventState>inactive</eventState>")) {
                         ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
-                        // ipCameraHandler.audioAlarmUpdateSnapshot = false;
-                        // ipCameraHandler.motionAlarmUpdateSnapshot = false;
-                        // ipCameraHandler.firstMotionAlarm = false;
                         countDown();
                         countDown();
                     }
                 } else if (content.contains("<channelID>0</channelID>")) {// NVR uses channel 0 to say all channels
                     if (content.contains("<eventType>videoloss</eventType>\r\n<eventState>inactive</eventState>")) {
                         ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
-                        // ipCameraHandler.audioAlarmUpdateSnapshot = false;
-                        // ipCameraHandler.motionAlarmUpdateSnapshot = false;
-                        // ipCameraHandler.firstMotionAlarm = false;
                         countDown();
                         countDown();
                     }

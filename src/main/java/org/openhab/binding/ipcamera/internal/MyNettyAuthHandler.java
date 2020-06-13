@@ -189,7 +189,7 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
             return;
         }
         boolean closeConnection = true;
-        String authenticate = null;
+        String authenticate = "";
         if (msg instanceof HttpResponse) {
             HttpResponse response = (HttpResponse) msg;
             if (response.status().code() == 401) {
@@ -223,7 +223,7 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
                     } finally {
                         myHandler.lock.unlock();
                     }
-                    if (authenticate != null) {
+                    if (!authenticate.equals("")) {
                         processAuth(authenticate, httpMethod, httpUrl, true);
                     } else {
                         myHandler.cameraConfigError(
@@ -233,10 +233,12 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
                         ctx.close();// needs to be here
                     }
                 }
+            } else if (response.status().code() != 200) {
+                logger.debug("Camera at IP:{} gave a reply with a response code of :{}", myHandler.ipAddress,
+                        response.status().code());
             }
         }
         // Pass the Message back to the pipeline for the next handler to process//
-        authenticate = null;
         super.channelRead(ctx, msg);
     }
 

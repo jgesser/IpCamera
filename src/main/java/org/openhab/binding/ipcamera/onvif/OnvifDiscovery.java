@@ -223,7 +223,7 @@ public class OnvifDiscovery {
         ChannelFuture chFuture = datagramChannel.writeAndFlush(datagramPacket);
         chFuture.awaitUninterruptibly(2000);
         chFuture = datagramChannel.closeFuture();
-        chFuture.awaitUninterruptibly(5000);
+        chFuture.awaitUninterruptibly(6000);
         processCameraReplys();
         bootstrap.config().group().shutdownGracefully();
     }

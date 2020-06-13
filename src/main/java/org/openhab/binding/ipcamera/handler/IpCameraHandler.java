@@ -671,7 +671,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 return;
             }
             try {
-                logger.trace("{}", msg.toString());
+                // logger.trace("{}", msg.toString());
                 if (msg instanceof HttpResponse) {
                     HttpResponse response = (HttpResponse) msg;
                     if (response.status().code() != 401) {
@@ -695,18 +695,6 @@ public class IpCameraHandler extends BaseThingHandler {
                                             isChunked = true;
                                         }
                                         break;
-                                    /*
-                                     * case "strict-transport-security":
-                                     * if (response.headers().getAsString(name)
-                                     * .contains("max-age=63072000; includeSubdomains; preload")) {
-                                     * logger.debug(
-                                     * "!! Header matched, this may be a Reolink camera. Closing channel and wont keep it open !!"
-                                     * );
-                                     * // Reolink cameras send more data than in the content length header.
-                                     * closeConnection = true;
-                                     * }
-                                     * break;
-                                     */
                                 }
                             }
                             if (contentType.contains("multipart")) {
