@@ -16,6 +16,7 @@ package org.openhab.binding.ipcamera.onvif;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
@@ -40,7 +41,6 @@ import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
@@ -58,7 +58,6 @@ import io.netty.util.CharsetUtil;
 @NonNullByDefault
 public class OnvifDiscovery {
     IpCameraDiscoveryService ipCameraDiscoveryService;
-    EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
     public ArrayList<String> listOfReplys = new ArrayList<String>(18);
 
@@ -112,11 +111,12 @@ public class OnvifDiscovery {
         return result;
     }
 
-    void getIPandPortFromUrl(String url) {
+    void getIPandPortFromUrl(String url, String xml) {
         String ipAddress = "";
         String temp = url;
         int onvifPort = 80;
 
+        logger.info("Camera found at xAddr:{}", url);
         int endIndex = temp.indexOf(" ");// Some xAddr have two urls with a space in between.
         if (endIndex > 0) {
             temp = temp.substring(0, endIndex);// Use only the first url from now on.
@@ -131,42 +131,62 @@ public class OnvifDiscovery {
         } else {// // http://192.168.0.1/onvif/device_service
             ipAddress = temp.substring(beginIndex, endIndex);
         }
-        logger.info("IP:{} and ONVIF PORT:{}", ipAddress, onvifPort);
-        ipCameraDiscoveryService.newCameraFound("ONVIF", ipAddress, onvifPort);
+        logger.debug("Camera IP:{} and ONVIF PORT:{}", ipAddress, onvifPort);
+        String brand = checkForBrand(xml);
+        if (brand.equals("ONVIF")) {
+            try {
+                brand = getBrandFromLoginPage(ipAddress);
+            } catch (IOException e) {
+                brand = "ONVIF";
+            }
+        }
+        ipCameraDiscoveryService.newCameraFound(brand, ipAddress, onvifPort);
     }
 
     void processCameraReplys() {
-        for (String reply : listOfReplys) {
-            String xAddr = fetchXML(reply, "", "<d:XAddrs>");
+        for (String xml : listOfReplys) {
+            String xAddr = fetchXML(xml, "", "<d:XAddrs>");
             if (!xAddr.equals("")) {
-                getIPandPortFromUrl(xAddr);
+                logger.trace("Discovery packet back from camera:{}", xml);
+                getIPandPortFromUrl(xAddr, xml);
             }
         }
     }
 
-    public String getCameraBrand(String hostname) throws IOException {
-        URL url = new URL(hostname);
+    String checkForBrand(String response) {
+        if (response.toLowerCase().contains("amcrest")) {
+            return "DAHUA";
+        } else if (response.toLowerCase().contains("dahua")) {
+            return "DAHUA";
+        } else if (response.toLowerCase().contains("foscam")) {
+            return "FOSCAM";
+        } else if (response.toLowerCase().contains("/doc/page/login.asp")) {
+            return "HIKVISION";
+        } else if (response.toLowerCase().contains("hikvision")) {
+            return "HIKVISION";
+        } else if (response.toLowerCase().contains("instar")) {
+            return "INSTAR";
+        } else if (response.toLowerCase().contains("doorbird")) {
+            return "DOORBIRD";
+        }
+        return "ONVIF";// generic camera
+    }
+
+    public String getBrandFromLoginPage(String hostname) throws IOException {
+        URL url = new URL("http://" + hostname);
+        String brand = "ONVIF";
         URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(2000);
+        connection.setConnectTimeout(1000);
         connection.setReadTimeout(2000);
         try {
             connection.connect();
             String response = IOUtils.toString(connection.getInputStream());
-            if (response.contains("amcrest")) {
-                return "DAHUA";
-            } else if (response.contains("dahua")) {
-                return "DAHUA";
-            } else if (response.contains("foscam")) {
-                return "FOSCAM";
-            } else if (response.contains("/doc/page/login.asp")) {
-                return "HIKVISION";
-            } else if (response.contains("instar")) {
-                return "INSTAR";
-            }
-            return "ONVIF";// generic camera
+            brand = checkForBrand(response);
+        } catch (MalformedURLException e) {
         } finally {
             IOUtils.closeQuietly(connection.getInputStream());
         }
+        return brand;
     }
 
     public void discoverCameras() throws UnknownHostException, InterruptedException {
@@ -200,10 +220,11 @@ public class OnvifDiscovery {
 
         datagramChannel = (DatagramChannel) bootstrap.bind(localNetworkAddress).sync().channel();
         datagramChannel.joinGroup(multiCastAddress, networkInterface).sync();
-        datagramChannel.writeAndFlush(datagramPacket);
-        ChannelFuture chFuture = datagramChannel.closeFuture();
-        chFuture.awaitUninterruptibly(4000);
-        logger.info("We found {} cameras.", listOfReplys.size());
+        ChannelFuture chFuture = datagramChannel.writeAndFlush(datagramPacket);
+        chFuture.awaitUninterruptibly(2000);
+        chFuture = datagramChannel.closeFuture();
+        chFuture.awaitUninterruptibly(5000);
         processCameraReplys();
+        bootstrap.config().group().shutdownGracefully();
     }
 }

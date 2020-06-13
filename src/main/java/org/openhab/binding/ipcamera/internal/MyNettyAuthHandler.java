@@ -118,22 +118,24 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
     // processAuth(challString, string,string, true) to auto send new packet
     // First run it should not have authenticate as null
     // nonce is reused if authenticate is null so the NC needs to increment to allow this//
-    public String processAuth(String authenticate, String httpMethod, String requestURI, boolean reSend) {
+    public void processAuth(String authenticate, String httpMethod, String requestURI, boolean reSend) {
         if (authenticate.contains("Basic realm=\"")) {
             if (myHandler.useDigestAuth == true) {
-                return "Error:Downgrade authenticate avoided";
+                // Possible downgrade authenticate attack avoided.
+                return;
             }
             logger.debug("Setting up the camera to use Basic Auth and resending last request with correct auth.");
-            myHandler.setBasicAuth(true);
-            myHandler.sendHttpRequest(httpMethod, requestURI, null);
-            return "Using Basic";
+            if (myHandler.setBasicAuth(true)) {
+                myHandler.sendHttpRequest(httpMethod, requestURI, null);
+            }
+            return;
         }
 
         /////// Fresh Digest Authenticate method follows as Basic is already handled and returned ////////
         realm = searchString(authenticate, "realm=\"");
         if (realm == "") {
             logger.warn("Could not find a valid WWW-Authenticate response in :{}", authenticate);
-            return "Error";
+            return;
         }
         nonce = searchString(authenticate, "nonce=\"");
         opaque = searchString(authenticate, "opaque=\"");
@@ -151,6 +153,11 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
         if (stale == "") {
         } else if (stale.equalsIgnoreCase("true")) {
             logger.debug("Camera reported stale=true which normally means the NONCE has expired.");
+        }
+
+        if (password.equals("")) {
+            myHandler.cameraConfigError("Camera gave a 401 reply: You need to provide a password.");
+            return;
         }
         // create the MD5 hashes
         String ha1 = username + ":" + realm + ":" + password;
@@ -172,9 +179,8 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
 
         if (reSend) {
             myHandler.sendHttpRequest(httpMethod, requestURI, digestString);
-            return "";
+            return;
         }
-        return digestString;
     }
 
     @Override
@@ -220,7 +226,8 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
                     if (authenticate != null) {
                         processAuth(authenticate, httpMethod, httpUrl, true);
                     } else {
-                        logger.warn("Camera gave a 401 reply and did not provide a WWW-Authenticate header");
+                        myHandler.cameraConfigError(
+                                "Camera gave no WWW-Authenticate: Your login details must be wrong.");
                     }
                     if (closeConnection) {
                         ctx.close();// needs to be here

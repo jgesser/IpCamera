@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.UUID;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -147,8 +146,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
                         + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken><ConfigurationToken>"
                         + ptzConfigToken + "</ConfigurationToken></AddPTZConfiguration>";
             case "CreatePullPointSubscription":
-                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT600S</InitialTerminationTime></CreatePullPointSubscription>";
-
+                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT10M</InitialTerminationTime></CreatePullPointSubscription>";
             case "GetCapabilities":
                 return "<GetCapabilities xmlns=\"http://www.onvif.org/ver10/device/wsdl\"><Category>All</Category></GetCapabilities>";
 
@@ -171,9 +169,11 @@ public class OnvifConnection extends ChannelDuplexHandler {
             case "Unsubscribe":// not tested
                 return "<Unsubscribe xmlns=\"http://docs.oasis-open.org/wsn/b-2/\"></Unsubscribe>";
             case "PullMessages":
-                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT1M</Timeout><MessageLimit>1024</MessageLimit></PullMessages>";
+                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT30S</Timeout><MessageLimit>1</MessageLimit></PullMessages>";
             case "GetEventProperties":
                 return "<GetEventProperties xmlns=\"http://www.onvif.org/ver10/events/wsdl\"/>";
+            case "Renew":
+                return "<Renew xmlns=\"http://docs.oasis-open.org/wsn/b-2\"><TerminationTime>PT10M</TerminationTime></Renew>";
             case "GetConfigurations":
                 return "<GetConfigurations xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"></GetConfigurations>";
             case "GetConfigurationOptions":
@@ -205,7 +205,12 @@ public class OnvifConnection extends ChannelDuplexHandler {
 
     public void processReply(String message) {
         logger.trace("Onvif reply is:{}", message);
-        if (message.contains("GetSystemDateAndTimeResponse")) {// 1st to be sent.
+        if (message.contains("PullMessagesResponse")) {
+            eventRecieved(message);
+            pullMessagesWorking = true;
+            sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
+            // sendOnvifRequest(requestBuilder("Renew", eventXAddr));
+        } else if (message.contains("GetSystemDateAndTimeResponse")) {// 1st to be sent.
             sendOnvifRequest(requestBuilder("GetCapabilities", deviceXAddr));
             parseDateAndTime(message);
             logger.debug("Openhabs UTC dateTime is:{}", getUTCdateTime());
@@ -218,23 +223,20 @@ public class OnvifConnection extends ChannelDuplexHandler {
             subscriptionXAddr = removeIPfromUrl(fetchXML(message, "SubscriptionReference>", "Address>"));
             logger.debug("subscriptionXAddr={}", subscriptionXAddr);
             sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
-        } else if (message.contains("PullMessagesResponse")) {
-            eventRecieved(message);
-            pullMessagesWorking = true;
         } else if (message.contains("GetProfilesResponse")) {// 3rd to be sent.
             parseProfiles(message);
             isConnected = true;
             sendOnvifRequest(requestBuilder("GetSnapshotUri", mediaXAddr));
             sendOnvifRequest(requestBuilder("GetStreamUri", mediaXAddr));
-            sendPTZRequest("GetNodes");
+            if (ptzDevice) {
+                sendPTZRequest("GetNodes");
+            }
             if (useEvents) {// stops API cameras from getting sent ONVIF events.
                 sendOnvifRequest(requestBuilder("GetEventProperties", eventXAddr));
             }
         } else if (message.contains("GetStatusResponse")) {
-            // logger.debug("GetStatusResponse recieved");
             processPTZLocation(message);
         } else if (message.contains("GetPresetsResponse")) {
-            // logger.debug("GetPresetsResponse recieved");
             presetTokens = listOfResults(message, "<tptz:Preset", "token=\"");
         } else if (message.contains("GetConfigurationsResponse")) {
             sendPTZRequest("GetPresets");
@@ -264,13 +266,19 @@ public class OnvifConnection extends ChannelDuplexHandler {
                 ipCameraHandler.rtspUri = rtspUri;
             }
         } else {
-            logger.debug("Unhandled Onvif reply is:{}", message);
+            // logger.debug("Unhandled Onvif reply is:{}", message);
         }
     }
 
     HttpRequest requestBuilder(String requestType, String xAddr) {
         logger.debug("Sending ONVIF request:{}", requestType);
         String security = "";
+        String extraEnvelope = " xmlns:a=\"http://www.w3.org/2005/08/addressing\"";
+        String headerTo = "";
+        if (requestType.equals("CreatePullPointSubscription") || requestType.equals("PullMessages")) {
+            headerTo = "<a:To s:mustUnderstand=\"1\">http://" + ipAddress + xAddr + "</a:To>";
+        }
+
         if (!password.equals("")) {
             String nonce = createNonce();
             String dateTime = getUTCdateTime();
@@ -284,22 +292,16 @@ public class OnvifConnection extends ChannelDuplexHandler {
                     + "</Nonce><Created xmlns=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">"
                     + dateTime + "</Created></UsernameToken></Security>";
         }
-        String headers = "<s:Header>" + security + "</s:Header>";
-        if (requestType.equals("PullMessages")) {
-            headers = "<s:Header>"
-                    + "<a:Action s:mustUnderstand=\"1\">http://www.onvif.org/ver10/events/wsdl/PullPointSubscription/PullMessagesRequest</a:Action><a:MessageID>urn:uuid:"
-                    + UUID.randomUUID().toString()
-                    + "</a:MessageID><a:ReplyTo><a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address></a:ReplyTo>"
-                    + security + "<a:To s:mustUnderstand=\"1\">http://" + ipAddress + subscriptionXAddr + "</a:To>"
-                    + "</s:Header>";
-        }
+
+        String headers = "<s:Header>" + security + headerTo + "</s:Header>";
 
         FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("POST"), xAddr);
         request.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/soap+xml; charset=utf-8");
         request.headers().set(HttpHeaderNames.HOST, ipAddress + ":" + onvifPort);
         request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, "gzip, deflate");
-        String fullXml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">" + headers
+        String fullXml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"" + extraEnvelope + ">"
+                + headers
                 + "<s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">"
                 + getXml(requestType) + "</s:Body></s:Envelope>";
         ByteBuf bbuf = Unpooled.copiedBuffer(fullXml, StandardCharsets.UTF_8);
@@ -392,7 +394,7 @@ public class OnvifConnection extends ChannelDuplexHandler {
 
                 @Override
                 public void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast("idleStateHandler", new IdleStateHandler(18, 18, 60));
+                    socketChannel.pipeline().addLast("idleStateHandler", new IdleStateHandler(62, 62, 62));
                     socketChannel.pipeline().addLast("HttpClientCodec", new HttpClientCodec());
                     socketChannel.pipeline().addLast("OnvifCodec", new OnvifCodec(getHandle()));
                 }
@@ -428,12 +430,14 @@ public class OnvifConnection extends ChannelDuplexHandler {
     }
 
     public void gotoPreset(int index) {
-        if (index > 0) {// 0 is reserved for HOME as cameras seem to start at preset 1.
-            if (presetTokens.isEmpty()) {
-                logger.warn("Camera did not report any ONVIF preset locations to the binding");
-            } else {
-                presetTokenIndex = index - 1;
-                sendPTZRequest("GotoPreset");
+        if (ptzDevice) {
+            if (index > 0) {// 0 is reserved for HOME as cameras seem to start at preset 1.
+                if (presetTokens.isEmpty()) {
+                    logger.warn("Camera did not report any ONVIF preset locations to the binding");
+                } else {
+                    presetTokenIndex = index - 1;
+                    sendPTZRequest("GotoPreset");
+                }
             }
         }
     }
@@ -475,7 +479,9 @@ public class OnvifConnection extends ChannelDuplexHandler {
     }
 
     public void getStatus() {
-        sendPTZRequest("GetStatus");
+        if (ptzDevice) {
+            sendPTZRequest("GetStatus");
+        }
     }
 
     public Float getAbsolutePan() {
@@ -491,28 +497,30 @@ public class OnvifConnection extends ChannelDuplexHandler {
     }
 
     public void setAbsolutePan(Float panValue) {// Value is 0-100% of cameras range
-        if (supportsPTZ()) {
+        if (ptzDevice) {
             currentPanPercentage = panValue;
             currentPanCamValue = ((((panRangeMin - panRangeMax) * -1) / 100) * panValue + panRangeMin);
         }
     }
 
     public void setAbsoluteTilt(Float tiltValue) {// Value is 0-100% of cameras range
-        if (supportsPTZ()) {
+        if (ptzDevice) {
             currentTiltPercentage = tiltValue;
             currentTiltCamValue = ((((panRangeMin - panRangeMax) * -1) / 100) * tiltValue + tiltRangeMin);
         }
     }
 
     public void setAbsoluteZoom(Float zoomValue) {// Value is 0-100% of cameras range
-        if (supportsPTZ()) {
+        if (ptzDevice) {
             currentZoomPercentage = zoomValue;
             currentZoomCamValue = ((((zoomMin - zoomMax) * -1) / 100) * zoomValue + zoomMin);
         }
     }
 
     public void absoluteMove() { // Camera wont move until PTZ values are set, then call this.
-        sendPTZRequest("AbsoluteMove");
+        if (ptzDevice) {
+            sendPTZRequest("AbsoluteMove");
+        }
     }
 
     public void setSelectedMediaProfile(int mediaProfileIndex) {

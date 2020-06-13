@@ -221,13 +221,15 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     // false clears the stored user/pass hash, true creates the hash
-    public void setBasicAuth(boolean useBasic) {
+    public boolean setBasicAuth(boolean useBasic) {
         if (useBasic == false) {
-            logger.debug("Removing BASIC auth now.");
+            logger.debug("Clearing out the stored BASIC auth now.");
             basicAuth = "";
-            return;
+            return false;
         } else if (!basicAuth.equals("")) {
-            logger.warn("Camera is reporting your username and/or password is wrong!");
+            // due to camera may have been sent multiple requests before the auth was set, this may trigger falsely.
+            logger.warn("Camera is reporting your username and/or password is wrong.");
+            return false;
         }
         if (!username.equals("") && !password.equals("")) {
             String authString = username + ":" + password;
@@ -241,9 +243,12 @@ public class IpCameraHandler extends BaseThingHandler {
                     byteBuf = null;
                 }
             }
+            return true;
         } else {
-            logger.error("Camera is asking for Basic Auth when you have not provided a username and/or password !");
+            cameraConfigError(
+                    "Camera is asking for Basic Auth when you have not provided a username and/or password !");
         }
+        return false;
     }
 
     private String getCorrectUrlFormat(String longUrl) {
@@ -1627,6 +1632,11 @@ public class IpCameraHandler extends BaseThingHandler {
         }
     };
 
+    public void cameraConfigError(String reason) {
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, reason);
+        restart();
+    }
+
     boolean streamIsStopped(String url) {
         byte indexInLists = 0;
         lock.lock();
@@ -1808,8 +1818,9 @@ public class IpCameraHandler extends BaseThingHandler {
         if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
             startStreamServer(true);
         }
-        BigDecimal test = new BigDecimal(config.get(CONFIG_ONVIF_PORT).toString());
+
         if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
+            BigDecimal test = new BigDecimal(config.get(CONFIG_ONVIF_PORT).toString());
             onvifCamera = new OnvifConnection(this, ipAddress + ":" + test.intValue(), username, password);
             onvifCamera.setSelectedMediaProfile(selectedMediaProfile);
             onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
@@ -1827,11 +1838,14 @@ public class IpCameraHandler extends BaseThingHandler {
     // What the camera needs to re-connect cleanly after a network drop out.
     private void resetConnection() {
         restart();
-        onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
+        if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
+            onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
+        }
     }
 
     // Called when camera goes offline but the main handler is not destroyed.
     private void restart() {
+        isOnline = false;
         onvifCamera.sendEventRequest("Unsubscribe");
         onvifCamera.disconnect();
         if (pollCameraJob != null) {
