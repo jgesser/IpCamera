@@ -109,9 +109,7 @@ public class InstarHandler extends ChannelDuplexHandler {
                         ipCameraHandler.setChannelState(CHANNEL_ENABLE_AUDIO_ALARM, OnOffType.valueOf("OFF"));
                     }
                     // Reset the Alarm, need to find better place to put this.
-                    ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                    ipCameraHandler.firstAudioAlarm = false;
-                    ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                    ipCameraHandler.noAudioDetected();
                     break;
                 case "param.cgi?cmd=getpirattr":// PIR Alarm
                     if (content.contains("var pir_enable=\"1\"")) {

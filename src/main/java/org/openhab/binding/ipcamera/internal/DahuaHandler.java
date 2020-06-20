@@ -102,9 +102,7 @@ public class DahuaHandler extends ChannelDuplexHandler {
             if (content.contains("Code=AudioMutation;action=Start;index=0")) {
                 ipCameraHandler.audioDetected();
             } else if (content.contains("Code=AudioMutation;action=Stop;index=0")) {
-                ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                ipCameraHandler.firstAudioAlarm = false;
-                ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                ipCameraHandler.noAudioDetected();
             }
             // Handle AudioMutationThreshold alarm
             if (content.contains("table.AudioDetect[0].MutationThreold=")) {

@@ -84,9 +84,7 @@ public class FoscamHandler extends ChannelDuplexHandler {
             }
             if (content.contains("<soundAlarm>1</soundAlarm>")) {
                 ipCameraHandler.setChannelState(CHANNEL_ENABLE_AUDIO_ALARM, OnOffType.valueOf("ON"));
-                ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                ipCameraHandler.firstAudioAlarm = false;
-                ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                ipCameraHandler.noAudioDetected();
             }
             if (content.contains("<soundAlarm>2</soundAlarm>")) {
                 ipCameraHandler.setChannelState(CHANNEL_ENABLE_AUDIO_ALARM, OnOffType.valueOf("ON"));

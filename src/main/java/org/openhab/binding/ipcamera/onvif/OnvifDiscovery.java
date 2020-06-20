@@ -59,7 +59,7 @@ import io.netty.util.CharsetUtil;
 public class OnvifDiscovery {
     IpCameraDiscoveryService ipCameraDiscoveryService;
     private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
-    public ArrayList<String> listOfReplys = new ArrayList<String>(18);
+    public ArrayList<DatagramPacket> listOfReplys = new ArrayList<DatagramPacket>(10);
 
     public OnvifDiscovery(IpCameraDiscoveryService ipCameraDiscoveryService) {
         this.ipCameraDiscoveryService = ipCameraDiscoveryService;
@@ -111,7 +111,7 @@ public class OnvifDiscovery {
         return result;
     }
 
-    void getIPandPortFromUrl(String url, String xml) {
+    void searchReply(String url, String xml) {
         String ipAddress = "";
         String temp = url;
         int onvifPort = 80;
@@ -144,11 +144,12 @@ public class OnvifDiscovery {
     }
 
     void processCameraReplys() {
-        for (String xml : listOfReplys) {
+        for (DatagramPacket packet : listOfReplys) {
+            String xml = packet.content().toString(CharsetUtil.UTF_8);
             String xAddr = fetchXML(xml, "", "<d:XAddrs>");
             if (!xAddr.equals("")) {
                 logger.trace("Discovery packet back from camera:{}", xml);
-                getIPandPortFromUrl(xAddr, xml);
+                searchReply(xAddr, xml);
             }
         }
     }
@@ -181,6 +182,7 @@ public class OnvifDiscovery {
         try {
             connection.connect();
             String response = IOUtils.toString(connection.getInputStream());
+            logger.trace("Cameras Login page is:{}", response);
             brand = checkForBrand(response);
         } catch (MalformedURLException e) {
         } finally {
@@ -212,7 +214,8 @@ public class OnvifDiscovery {
                     @Override
                     protected void channelRead0(@Nullable ChannelHandlerContext ctx, DatagramPacket msg)
                             throws Exception {
-                        listOfReplys.add(msg.content().toString(CharsetUtil.UTF_8));
+                        msg.retain(1);
+                        listOfReplys.add(msg);
                     }
                 }).option(ChannelOption.SO_BROADCAST, true).option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.IP_MULTICAST_LOOP_DISABLED, false).option(ChannelOption.SO_RCVBUF, 2048)

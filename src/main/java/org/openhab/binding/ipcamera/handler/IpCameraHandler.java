@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.core.Configuration;
+import org.eclipse.smarthome.core.library.types.IncreaseDecreaseType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.PercentType;
 import org.eclipse.smarthome.core.library.types.RawType;
@@ -1285,6 +1286,12 @@ public class IpCameraHandler extends BaseThingHandler {
         }
     }
 
+    public void noAudioDetected() {
+        setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
+        firstAudioAlarm = false;
+        audioAlarmUpdateSnapshot = false;
+    }
+
     public String returnValueFromString(String rawString, String searchedString) {
         String result = "";
         int index = rawString.indexOf(searchedString);
@@ -1443,18 +1450,42 @@ public class IpCameraHandler extends BaseThingHandler {
                     return;
                 case CHANNEL_PAN:
                     if (onvifCamera.supportsPTZ()) {
+                        if (command instanceof IncreaseDecreaseType) {
+                            if ("INCREASE".equals(command.toString())) {
+                                onvifCamera.sendPTZRequest("RelativeMoveLeft");
+                            } else {
+                                onvifCamera.sendPTZRequest("RelativeMoveRight");
+                            }
+                            return;
+                        }
                         onvifCamera.setAbsolutePan(Float.valueOf(command.toString()));
                         movePTZ = true;
                     }
                     return;
                 case CHANNEL_TILT:
                     if (onvifCamera.supportsPTZ()) {
+                        if (command instanceof IncreaseDecreaseType) {
+                            if ("INCREASE".equals(command.toString())) {
+                                onvifCamera.sendPTZRequest("RelativeMoveUp");
+                            } else {
+                                onvifCamera.sendPTZRequest("RelativeMoveDown");
+                            }
+                            return;
+                        }
                         onvifCamera.setAbsoluteTilt(Float.valueOf(command.toString()));
                         movePTZ = true;
                     }
                     return;
                 case CHANNEL_ZOOM:
                     if (onvifCamera.supportsPTZ()) {
+                        if (command instanceof IncreaseDecreaseType) {
+                            if ("INCREASE".equals(command.toString())) {
+                                onvifCamera.sendPTZRequest("RelativeMoveIn");
+                            } else {
+                                onvifCamera.sendPTZRequest("RelativeMoveOut");
+                            }
+                            return;
+                        }
                         onvifCamera.setAbsoluteZoom(Float.valueOf(command.toString()));
                         movePTZ = true;
                     }
@@ -1666,6 +1697,9 @@ public class IpCameraHandler extends BaseThingHandler {
             // NOTE: Use lowPriorityRequests if get request is not needed every poll.
             switch (thing.getThingTypeUID().getId()) {
                 case "HTTPONLY":
+                    break;
+                case "ONVIF":
+                    onvifCamera.pollMessages();
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
