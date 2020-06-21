@@ -13,21 +13,22 @@
 
 package org.openhab.binding.ipcamera.onvif;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.ipcamera.internal.IpCameraDiscoveryService;
@@ -161,14 +162,14 @@ public class OnvifDiscovery {
             return "DAHUA";
         } else if (response.toLowerCase().contains("foscam")) {
             return "FOSCAM";
-        } else if (response.toLowerCase().contains("/doc/page/login.asp")) {
-            return "HIKVISION";
         } else if (response.toLowerCase().contains("hikvision")) {
             return "HIKVISION";
         } else if (response.toLowerCase().contains("instar")) {
             return "INSTAR";
         } else if (response.toLowerCase().contains("doorbird")) {
             return "DOORBIRD";
+        } else if (response.toLowerCase().contains("/doc/page/login.asp")) {
+            return "HIKVISION";
         }
         return "ONVIF";// generic camera
     }
@@ -176,17 +177,26 @@ public class OnvifDiscovery {
     public String getBrandFromLoginPage(String hostname) throws IOException {
         URL url = new URL("http://" + hostname);
         String brand = "ONVIF";
-        URLConnection connection = url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(1000);
         connection.setReadTimeout(2000);
+        connection.setInstanceFollowRedirects(true);
+        connection.setRequestMethod("GET");
         try {
             connection.connect();
-            String response = IOUtils.toString(connection.getInputStream());
+            // int status = connection.getResponseCode();
+            BufferedReader reply = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String response = "";
+            String temp;
+            while ((temp = reply.readLine()) != null) {
+                response += temp;
+            }
+            reply.close();
             logger.trace("Cameras Login page is:{}", response);
             brand = checkForBrand(response);
         } catch (MalformedURLException e) {
         } finally {
-            IOUtils.closeQuietly(connection.getInputStream());
+            connection.disconnect();
         }
         return brand;
     }

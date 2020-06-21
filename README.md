@@ -627,15 +627,26 @@ For the above notifications to work you will need to setup multiple users with t
 
 ## Moving PTZ capable cameras
 
-Currently there are two ways to move the camera, 1 is with Onvif Absolute move, and the second is with Onvif presets. 
-The full example above shows how to use the Absolute move method. When a control is moved, it will wait until the next poll time to arrive and make all the movements at the same time. 
-Not all cameras support Absolute movements, so the below Onvif Preset method is easier to use, does not need a rule to set 3 different values from a single button, and does not wait for the poll time to arrive.
+To move a camera with this binding you need an ONVIF camera that supports one of the following:
+
++ Onvif Absolute movements 
++ Onvif Presets
++ Onvif Relative movements
+
+There is one more method that Onvif has that is not yet implemented in the binding and this is called ``Continuous`` movements, PR are welcome to add this. To test your cameras compatibility out and also to create some preset locations use a free program called ``onvif device manager``. After creating or changing the presets it may be necessary to restart the binding before they can be used. You can create names using the mappings feature of the selection element.
+
+See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
+
+
 
 item:
 
 ```java
 
-Number TestCamGotoPreset "Goto Preset" { channel="ipcamera:INSTAR:TestCam:gotoPreset" }
+Number TestCamGotoPreset "Goto Preset" { channel="ipcamera:ONVIF:TestCam:gotoPreset" }
+Dimmer TestCamPan "Pan [%d] left/right" { channel="ipcamera:ONVIF:TestCam:pan" }
+Dimmer TestCamTilt "Tilt [%d] up/down" { channel="ipcamera:ONVIF:TestCam:tilt" }
+Dimmer TestCamZoom "Zoom [%d] in/out" { channel="ipcamera:ONVIF:TestCam:zoom" }
 
 ```
 
@@ -643,19 +654,34 @@ sitemap:
 
 ```java
 
-Selection item=TestCamGotoPreset 
+Selection item=TestCamGotoPreset
+Setpoint item=TestCamPan
+Setpoint item=TestCamTilt 
+Setpoint item=TestCamZoom
+Slider item=TestCamPan
+Slider item=TestCamTilt 
+Slider item=TestCamZoom
 
 ```
 
-Rules:
+
+Moving the camera to an EXACT repeatable location (Preset 1 saved location) with a rule:
 
 ```java
 TestCamGotoPreset.sendCommand(1)
 ```
 
-The presets do not wait until the next poll time to arrive and are made right away, so this makes the method more desirable if you set a high POLL_CAMERA_MS time.
-To create the preset locations, use a program like the free 'onvif device manager' program to create the presets and then you can create names using the mappings feature of the selection element. 
-See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
+
+Moving the camera to an EXACT repeatable location using Absolute movement with a rule:
+
+```java
+TestCamPan.sendCommand(22)
+TestCamTilt.sendCommand(60)
+TestCamZoom.sendCommand(0)
+```
+
+Moving the camera using Relative movements can be done sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels. This method makes most sense if you wish to push arrow buttons on a Habpanel screen to move the camera. The Setpoint buttons send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
+
 
 
 ## Image / Snapshots

@@ -201,7 +201,7 @@ public class IpCameraHandler extends BaseThingHandler {
     boolean firstMotionAlarm = false;
     boolean shortAudioAlarm = true; // used for when the alarm is less than the polling amount of time.
     boolean shortMotionAlarm = true; // used for when the alarm is less than the polling amount of time.
-    boolean movePTZ = false; // delay movements so all made at once
+    // boolean movePTZ = false; // delay movements so all made at once
     public Double motionThreshold = 0.0016;
     public int audioThreshold = 35;
     @SuppressWarnings("unused")
@@ -1459,7 +1459,8 @@ public class IpCameraHandler extends BaseThingHandler {
                             return;
                         }
                         onvifCamera.setAbsolutePan(Float.valueOf(command.toString()));
-                        movePTZ = true;
+                        // scheduledMovePTZ.shutdown();
+                        scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
                 case CHANNEL_TILT:
@@ -1473,7 +1474,8 @@ public class IpCameraHandler extends BaseThingHandler {
                             return;
                         }
                         onvifCamera.setAbsoluteTilt(Float.valueOf(command.toString()));
-                        movePTZ = true;
+                        // scheduledMovePTZ.shutdown();
+                        scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
                 case CHANNEL_ZOOM:
@@ -1487,7 +1489,8 @@ public class IpCameraHandler extends BaseThingHandler {
                             return;
                         }
                         onvifCamera.setAbsoluteZoom(Float.valueOf(command.toString()));
-                        movePTZ = true;
+                        // scheduledMovePTZ.shutdown();
+                        scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
             }
@@ -1734,11 +1737,6 @@ public class IpCameraHandler extends BaseThingHandler {
             }
             if (ffmpegHLS != null) {
                 ffmpegHLS.checkKeepAlive();
-            }
-            // Delay movements so when a rule changes all 3, a single movement is made.
-            if (movePTZ) {
-                movePTZ = false;
-                scheduledMovePTZ.schedule(runnableMovePTZ, 50, TimeUnit.MILLISECONDS);
             }
             if (listOfRequests.size() > 12) {
                 logger.debug(
