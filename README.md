@@ -872,6 +872,45 @@ tmpfs /tmpfs tmpfs defaults,nosuid,nodev,noatime,size=20m 0 0
 ```
 
 
+**FFmpeg HLS Special settings**
+
+Please get the default settings working first before playing with the advanced settings.
+
+To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest using ``AAC`` as MP3 is not supported by Google/Nest. 
+Then you need to change the HLS settings to what you need, some are suggestions below.
+
+
+
+Less delay behind realtime (no audio) if your cameras iFrames are 1 second apart:
+
+```bash
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 1 -hls_list_size 4
+```
+
+
+For cameras with no audio in the stream (default setting) and it must be a supported format like AAC.
+
+```bash
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
+```
+
+
+For cameras with audio in the stream. Note will break Chromecast if the camera does not send audio which is why this is not the default.
+
+```bash
+-strict -2 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
+```
+
+
+Some browsers require larger segment sizes to prevent choppy playback, this can be done with this setting to create 10 second segment files which increases the time before you can get playback working.
+
+```bash
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 10 -hls_list_size 4
+
+```
+
+
+
 **HLS Sitemap examples**
 
 The webview version allows you to zoom in on the video when using the iOS app, the Video element version does not zoom, but it will pass through myopenhab.
@@ -921,63 +960,36 @@ Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
 
 ##Habpanel##
 
-This section is how to get things working in Habpanel.
+This section is about how to get things working in Habpanel.
 
-How to display Mjpeg based streams:
+I highly recommend you check out the easy to use WIDGETS of which there are now 3 ready made ones that are discussed on the forum here.
+<https://community.openhab.org/t/custom-widget-camera-clickable-thumbnails-that-open-a-stream/101275>
+
+The widgets in the link above are the easiest way to get an advanced stream working in Openhab and you are welcome to open them up, look at how they work and change them to something even better that suits your needs.
+If you don't like doing things the easy way with a ready made widget, below are how it can be done without a widget.
+
+**How to manually display Mjpeg based streams without using the above WIDGETS:**
 
 + Add a FRAME widget
 + Set URL Source to be 'openHAB String Item'
 + Select the item that is bound to the ``streamUrl`` channel of your camera that is setup with this binding and ONLINE.
 + Alternatively you can set a static url like ``http://192.168.1.2:50001/snapshots.mjpeg`` to have the binding create a high resolution mjpeg stream out of your snapshots or the cameras url to fetch the stream directly.
 
-How to display HLS:
 
-+ Add a template widget with the following code linking to your cameras ``hlsUrl`` channel:
+**How to manually display HLS without using the above WIDGETS:**
 
-```
-<span style="position:absolute; height:100%; width:100%; overflow: hidden; top: 0; left: 0;">
-<video style="width: 100%; height: 100%; position: relative; top: 0; left: 0;" src="{{itemValue('Camera1_hlsUrl')}}" controls autoplay/>
-</span>
++ Add a template widget with the following code using an Openhab item to link to your cameras ``hlsUrl`` channel.
+
 
 ```
 
-
-
-**FFmpeg HLS Special settings**
-
-To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest using ``AAC`` as MP3 is not supported by Google/Nest. Then you need to change the HLS settings to what you need, some are suggestions below.
-
-
-Less delay behind realtime (no audio) if your cameras iFrames are 1 second apart:
-
-```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 1 -hls_list_size 4
-```
-
-
-For cameras with no audio in the stream (default setting) and it must be a supported format like AAC.
-
-```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
-```
-
-
-For cameras with audio in the stream. Note will break Chromecast if the camera does not send audio which is why this is not the default.
-
-```bash
--strict -2 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 2 -hls_list_size 4
-```
-
-
-Some browsers require larger segment sizes to prevent choppy playback, this can be done with this setting to create 10 second segment files which increases the time before you can get playback working.
-
-```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -hls_time 10 -hls_list_size 4
+<video width="100%" height="100%" autoplay src="{{itemValue('Camera_hlsUrl')}}"</video>
 
 ```
 
 
-**Animated GIF feature**
+
+##Animated GIF feature##
 
 This binding has a channel called `updateGif` and when this switch is turned 'ON' (either by a rule or manually) the binding will create an animated GIF called ipcamera.gif in the ffmpeg output folder.
 You can change the filename using the string channel that is called `gifFilename` and an example of how to use this in a rule can be seen under the MP4 recording section.

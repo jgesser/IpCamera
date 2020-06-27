@@ -73,6 +73,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void handlerAdded(@Nullable ChannelHandlerContext ctx) {
+        logger.trace("Opening a StreamServerHandler.");
     }
 
     @Override
@@ -115,15 +116,15 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                                 ipCameraHandler.ffmpegHLS.setKeepAlive(60);
                             }
                             sendFile(ctx, httpRequest.uri(), "application/x-mpegurl");
-                            break;
+                            return;
                         case "/ipcamera.mpd":
                             // ipCameraHandler.setupFfmpegFormat("DASH");
                             // ipCameraHandler.ffmpegDASH.setKeepAlive(60);// setup must come first
                             sendFile(ctx, httpRequest.uri(), "application/dash+xml");
-                            break;
+                            return;
                         case "/ipcamera.gif":
                             sendFile(ctx, httpRequest.uri(), "image/gif");
-                            break;
+                            return;
                         case "/ipcamera.jpg":
                             if (!ipCameraHandler.updateImageEvents.contentEquals("1")) {
                                 if (ipCameraHandler.snapshotUri != "") {
@@ -138,24 +139,24 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                                 }
                             }
                             sendSnapshotImage(ctx, "image/jpg");
-                            break;
+                            return;
                         case "/snapshots.mjpeg":
                             handlingSnapshotStream = true;
                             ipCameraHandler.setupSnapshotStreaming(true, ctx, false);
-                            break;
+                            return;
                         case "/ipcamera.mjpeg":
                             ipCameraHandler.setupMjpegStreaming(true, ctx);
                             handlingMjpeg = true;
-                            break;
+                            return;
                         case "/autofps.mjpeg":
                             handlingSnapshotStream = true;
                             ipCameraHandler.setupSnapshotStreaming(true, ctx, true);
-                            break;
+                            return;
                         case "/instar":
                             InstarHandler instar = new InstarHandler(ipCameraHandler);
                             instar.alarmTriggered(httpRequest.uri().toString());
                             ctx.close();
-                            break;
+                            return;
                         case "/ipcamera0.ts":
                             TimeUnit.SECONDS.sleep(6);
                         default:
@@ -169,6 +170,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             } else if (httpRequest.uri().contains(".mp4")) {
                                 sendFile(ctx, queryStringDecoder.path(), "video/mp4");
                             }
+                            return;
                     }
                 } else if ("POST".equalsIgnoreCase(httpRequest.method().toString())) {
                     switch (httpRequest.uri()) {
@@ -289,6 +291,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
+        logger.trace("Stream server:{}.", evt);
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.WRITER_IDLE) {
@@ -303,7 +306,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
-        // logger.trace("Closing a StreamServerHandler.");
+        logger.trace("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);
         } else if (handlingSnapshotStream) {

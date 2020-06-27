@@ -556,17 +556,8 @@ public class IpCameraHandler extends BaseThingHandler {
         chFuture.awaitUninterruptibly();
 
         if (!chFuture.isSuccess()) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+            cameraCommunicationError(
                     "Connection Timeout: Check your IP and PORT are correct and the camera can be reached.");
-            resetConnection();
-            if (isOnline) {
-                isOnline = false; // Stop multiple errors when camera takes a while to connect.
-                logger.error("Can not connect with HTTP to the camera at {}:{} check your network for issues!",
-                        ipAddress, port);
-                cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 8, TimeUnit.SECONDS);
-            } else {
-                cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
-            }
             return false;
         }
 
@@ -1013,6 +1004,11 @@ public class IpCameraHandler extends BaseThingHandler {
                     sendMjpegFirstPacket(ctx);
                     setupFfmpegFormat("MJPEG");
                 } else {
+                    try {
+                        // fix Dahua reboots when refreshing a mjpeg stream.
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException e) {
+                    }
                     sendHttpGET(mjpegUri);
                 }
             } else if (!firstStreamedMsg.toString().isEmpty()) {
@@ -1025,7 +1021,7 @@ public class IpCameraHandler extends BaseThingHandler {
         } else {
             mjpegChannelGroup.remove(ctx.channel());
             if (mjpegChannelGroup.isEmpty()) {
-                logger.debug("All MJPEG streams have stopped, so closing the MJPEG source stream now.");
+                logger.debug("All Mjpeg streams have stopped, cleaning up now");
                 if (mjpegUri.equals("ffmpeg")) {
                     if (ffmpegMjpeg != null) {
                         ffmpegMjpeg.stopConverting();
@@ -1655,8 +1651,15 @@ public class IpCameraHandler extends BaseThingHandler {
     };
 
     public void cameraConfigError(String reason) {
+        // wont try to reconnect again due to a config error being the cause.
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, reason);
         restart();
+    }
+
+    public void cameraCommunicationError(String reason) {
+        // will try to reconnect again as camera may be rebooting.
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, reason);
+        resetAndRetryConnecting();
     }
 
     boolean streamIsStopped(String url) {
@@ -1855,12 +1858,16 @@ public class IpCameraHandler extends BaseThingHandler {
         cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 3, 58, TimeUnit.SECONDS);
     }
 
-    // What the camera needs to re-connect cleanly after a network drop out.
-    private void resetConnection() {
+    // What the camera needs to re-connect if the initialize() is not called.
+    private void resetAndRetryConnecting() {
         restart();
         if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
             onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
         }
+        if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
+            startStreamServer(true);
+        }
+        cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
     }
 
     // Called when camera goes offline but the main handler is not destroyed.
