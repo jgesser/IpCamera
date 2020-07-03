@@ -87,7 +87,7 @@
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -286,7 +286,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -474,7 +474,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -519,6 +519,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -675,7 +682,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -754,6 +761,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -923,7 +937,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -1002,6 +1016,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -1152,7 +1173,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -1219,6 +1240,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -1375,7 +1403,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -1460,6 +1488,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -1623,7 +1658,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -1702,6 +1737,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
@@ -1861,7 +1903,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
 <label>IP_WHITELIST</label>
-<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. DISABLE will turn this feature off.
+<description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
@@ -1926,6 +1968,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>Password for camera.</label>
 <description>Enter Password for your camera. Leave blank if your camera does not use login details.
 </description>
+</parameter>
+
+<parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
+<label>Use Continuous PTZ movements instead of Relative Moves.</label>
+<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+</description>
+<default>false</default>
 </parameter>
 
 <parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">

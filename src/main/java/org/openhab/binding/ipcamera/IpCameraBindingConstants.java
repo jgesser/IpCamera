@@ -69,6 +69,7 @@ public class IpCameraBindingConstants {
     public static final String CONFIG_THIRD_CAM = "THIRD_CAM";
     public static final String CONFIG_FORTH_CAM = "FORTH_CAM";
     public static final String CONFIG_MOTION_CHANGES_ORDER = "MOTION_CHANGES_ORDER";
+    public static final String CONFIG_PTZ_CONTINUOUS = "PTZ_CONTINUOUS";
 
     // List of all Channel ids
     public static final String CHANNEL_UPDATE_IMAGE_NOW = "updateImageNow";

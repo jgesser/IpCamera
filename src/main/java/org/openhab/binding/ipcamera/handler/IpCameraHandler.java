@@ -131,6 +131,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private ScheduledExecutorService cameraConnection = Executors.newScheduledThreadPool(1);
     private ScheduledExecutorService scheduledMovePTZ = Executors.newScheduledThreadPool(1);
     private ScheduledExecutorService pollCamera = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService snapshot = Executors.newScheduledThreadPool(1);
     public Configuration config;
 
     // ChannelGroup is thread safe
@@ -149,6 +150,7 @@ public class IpCameraHandler extends BaseThingHandler {
 
     private @Nullable ScheduledFuture<?> cameraConnectionJob = null;
     private @Nullable ScheduledFuture<?> pollCameraJob = null;
+    private @Nullable ScheduledFuture<?> snapshotJob = null;
     private @Nullable Bootstrap mainBootstrap;
     private @Nullable ServerBootstrap serverBootstrap;
     private String username = "";
@@ -922,7 +924,7 @@ public class IpCameraHandler extends BaseThingHandler {
     public void startStreamServer(boolean start) {
 
         if (!start) {
-            serversLoopGroup.shutdownGracefully(8, 8, TimeUnit.SECONDS);
+            serversLoopGroup.shutdownGracefully();
             serverBootstrap = null;
         } else {
             if (serverBootstrap == null) {
@@ -1448,14 +1450,24 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (onvifCamera.supportsPTZ()) {
                         if (command instanceof IncreaseDecreaseType) {
                             if ("INCREASE".equals(command.toString())) {
-                                onvifCamera.sendPTZRequest("RelativeMoveLeft");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveLeft");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveLeft");
+                                }
                             } else {
-                                onvifCamera.sendPTZRequest("RelativeMoveRight");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveRight");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveRight");
+                                }
                             }
+                            return;
+                        } else if ("OFF".equals(command.toString())) {
+                            onvifCamera.sendPTZRequest("Stop");
                             return;
                         }
                         onvifCamera.setAbsolutePan(Float.valueOf(command.toString()));
-                        // scheduledMovePTZ.shutdown();
                         scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
@@ -1463,14 +1475,24 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (onvifCamera.supportsPTZ()) {
                         if (command instanceof IncreaseDecreaseType) {
                             if ("INCREASE".equals(command.toString())) {
-                                onvifCamera.sendPTZRequest("RelativeMoveUp");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveUp");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveUp");
+                                }
                             } else {
-                                onvifCamera.sendPTZRequest("RelativeMoveDown");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveDown");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveDown");
+                                }
                             }
+                            return;
+                        } else if ("OFF".equals(command.toString())) {
+                            onvifCamera.sendPTZRequest("Stop");
                             return;
                         }
                         onvifCamera.setAbsoluteTilt(Float.valueOf(command.toString()));
-                        // scheduledMovePTZ.shutdown();
                         scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
@@ -1478,14 +1500,24 @@ public class IpCameraHandler extends BaseThingHandler {
                     if (onvifCamera.supportsPTZ()) {
                         if (command instanceof IncreaseDecreaseType) {
                             if ("INCREASE".equals(command.toString())) {
-                                onvifCamera.sendPTZRequest("RelativeMoveIn");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveIn");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveIn");
+                                }
                             } else {
-                                onvifCamera.sendPTZRequest("RelativeMoveOut");
+                                if ((boolean) config.get(CONFIG_PTZ_CONTINUOUS)) {
+                                    onvifCamera.sendPTZRequest("ContinuousMoveOut");
+                                } else {
+                                    onvifCamera.sendPTZRequest("RelativeMoveOut");
+                                }
                             }
+                            return;
+                        } else if ("OFF".equals(command.toString())) {
+                            onvifCamera.sendPTZRequest("Stop");
                             return;
                         }
                         onvifCamera.setAbsoluteZoom(Float.valueOf(command.toString()));
-                        // scheduledMovePTZ.shutdown();
                         scheduledMovePTZ.schedule(runnableMovePTZ, 500, TimeUnit.MILLISECONDS);
                     }
                     return;
@@ -1617,7 +1649,6 @@ public class IpCameraHandler extends BaseThingHandler {
                     logger.warn("Binding has not been supplied with a RTSP URL so some features will not work.");
                 }
                 if (!snapshotUri.equals("") && !snapshotUri.equals("ffmpeg")) {
-                    logger.debug("Camera at {} has a snapshot address of:{}:", ipAddress, snapshotUri);
                     if (sendHttpRequest("GET", snapshotUri, null)) {
                         bringCameraOnline();
                     }
@@ -1626,13 +1657,11 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 return;
             }
-
             if (!onvifCamera.isConnected()) {
                 logger.debug("About to connect to the IP Camera using the ONVIF PORT at IP:{}:{}", ipAddress,
                         config.get(CONFIG_ONVIF_PORT).toString());
                 onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
             }
-
             if (snapshotUri.equals("ffmpeg")) {
                 snapshotIsFfmpeg();
             } else if (!snapshotUri.equals("")) {
@@ -1643,8 +1672,6 @@ public class IpCameraHandler extends BaseThingHandler {
                 snapshotIsFfmpeg();
             } else {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                        "Camera failed to report a valid Snaphot and/or RTSP URL. See readme on how to use the SNAPSHOT_URL_OVERRIDE feature.");
-                logger.warn(
                         "Camera failed to report a valid Snaphot and/or RTSP URL. See readme on how to use the SNAPSHOT_URL_OVERRIDE feature.");
             }
         }
@@ -1682,6 +1709,37 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         return false; // Stream is still open
     }
+
+    Runnable snapshotRunnable = new Runnable() {
+        @Override
+        public void run() {
+
+            // Snapshot should be first to keep consistent time between shots
+            if (!snapshotUri.equals("")) {
+                if (updateImageEvents.contains("1") || updateImageChannel) {
+                    sendHttpGET(snapshotUri);
+                } else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
+                    sendHttpGET(snapshotUri);
+                    updateCounter = 5;
+                    shortAudioAlarm = false;
+                } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
+                    sendHttpGET(snapshotUri);
+                    updateCounter = 5;
+                    shortMotionAlarm = false;
+                }
+            }
+
+            if (thing.getThingTypeUID().getId().equals("ONVIF")) {
+                onvifCamera.pollMessages();
+            }
+            if (snapCount > 0) {
+                if (--snapCount == 0) {
+                    setupFfmpegFormat("GIF");
+                }
+            }
+
+        }
+    };
 
     Runnable pollingCamera = new Runnable() {
         @Override
@@ -1747,6 +1805,7 @@ public class IpCameraHandler extends BaseThingHandler {
                         listOfRequests.size());
                 cleanChannels();
             }
+
             if (snapCount > 0) {
                 if (--snapCount == 0) {
                     setupFfmpegFormat("GIF");
@@ -1865,7 +1924,15 @@ public class IpCameraHandler extends BaseThingHandler {
             onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
         }
         if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
-            startStreamServer(true);
+            if (serversLoopGroup.isShuttingDown()) {
+                try {
+                    serversLoopGroup.awaitTermination(20, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                }
+            }
+            if (serversLoopGroup.isShutdown()) {
+                startStreamServer(true);
+            }
         }
         cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
     }

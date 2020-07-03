@@ -611,11 +611,15 @@ For the above notifications to work you will need to setup multiple users with t
 
 To move a camera with this binding you need an ONVIF camera that supports one of the following:
 
-+ Onvif Absolute movements 
-+ Onvif Presets
-+ Onvif Relative movements
++ Absolute movements
++ Relative movements
++ Continuous movements
++ Presets
 
-There is one more method that Onvif has that is not yet implemented in the binding and this is called ``Continuous`` movements, PR are welcome to add this. To test your cameras compatibility out and also to create some preset locations use a free program called ``onvif device manager``. After creating or changing the presets it may be necessary to restart the binding before they can be used. You can create names using the mappings feature of the selection element.
+
+To test your cameras compatibility out and also to create some preset locations use a free program called ``onvif device manager``. 
+After creating or changing the presets it may be necessary to restart the binding before they can be used. 
+You can create names using the mappings feature of the selection element.
 
 See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
 
@@ -662,7 +666,10 @@ TestCamTilt.sendCommand(60)
 TestCamZoom.sendCommand(0)
 ```
 
-Moving the camera using Relative movements can be done sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels. This method makes most sense if you wish to push arrow buttons on a Habpanel screen to move the camera. The Setpoint buttons send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
+Moving the camera using Relative/Continuous movements can be done sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels. The OFF command will stop the cameras movements in the case of continuous has been selected in the things config setup. 
+These methods make the most sense if you wish to push arrow buttons on a Habpanel screen to move the camera.
+There are some widgets created in the gallery that you can download and use right away saving you time. 
+The Setpoint buttons send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
 
 
 
@@ -1258,8 +1265,6 @@ Areas the binding could be improved are:
 + Taking care of any build errors to get the binding ready for merging into the main project.
 
 + Fixing any text that is confusing in log output or in the User Interfaces.
-
-+ PTZ methods for continuous move so you can scan back and forth. 
 
 + 1 and 2 way audio. Keen to add this at some point for talking with people at my front door and baby monitor uses. Most likely only a few select brands of camera that have an API for doing this will get the ability.
 

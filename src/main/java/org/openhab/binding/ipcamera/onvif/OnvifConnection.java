@@ -140,6 +140,34 @@ public class OnvifConnection {
                 return "<AddPTZConfiguration xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex) + "</ProfileToken><ConfigurationToken>"
                         + ptzConfigToken + "</ConfigurationToken></AddPTZConfiguration>";
+            case "ContinuousMoveLeft":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><PanTilt x=\"-0.5\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+            case "ContinuousMoveRight":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><PanTilt x=\"0.5\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+            case "ContinuousMoveUp":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+            case "ContinuousMoveDown":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"-0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+            case "Stop":
+                return "<Stop xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><PanTilt>true</PanTilt><Zoom>true</Zoom></Stop>";
+            case "ContinuousMoveIn":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><Zoom x=\"0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+            case "ContinuousMoveOut":
+                return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
+                        + mediaProfileTokens.get(mediaProfileIndex)
+                        + "</ProfileToken><Velocity><Zoom x=\"-0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
             case "CreatePullPointSubscription":
                 return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT10M</InitialTerminationTime></CreatePullPointSubscription>";
             case "GetCapabilities":
