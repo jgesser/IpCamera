@@ -780,36 +780,46 @@ end
 ```
 
 
-**MJPEG Streaming**
+##MJPEG Streams##
 
-Cameras that have MJPEG abilities via HTTP (cameras with an API) can stream to openHAB with the MJPEG format with next to no CPU load and Ffmpeg does not need to be installed. 
-The binding is now able to create mjpeg from a rtsp source and this will require Ffmpeg to be installed and will use the Openhab servers CPU to create the stream.
-To do this you can set ``STREAM_URL_OVERRIDE="ffmpeg"`` to use your CPU to generate the mjpeg stream, or you can use the snapshots.mjpeg to create a stream without using the CPU.
-Ffmpeg may require you to lower the resolution and/or the FPS to lower the CPU load down enough to run, you may need to experiment.
-The main cameras that can do mjpeg with very low CPU load are Amcrest, Dahua, Hikvision, Foscam HD and Instar HD. 
-For cameras that do not auto detect the url for mjpeg streams, you will need to enter a working url for ``STREAM_URL_OVERRIDE`` otherwise ffmpeg will be the default and create the stream when asked. 
-This can be skipped for the already mentioned brands but check for any special setup steps for your brand in this readme. 
-If you can not find STREAM_URL_OVERRIDE, you need to click on the pencil icon in PaperUI to edit the configuration and then scroll to the very bottom of the page and click on the SHOW MORE link.
+Cameras that have built in MJPEG abilities can stream to openHAB with the MJPEG format with next to no CPU load and FFmpeg does not need to be installed.
+Cameras without this ability can still use this binding to convert their cameras h264 format to mjpeg (keep reading for more on this below) and this takes a lot of CPU power to handle the conversion. 
+The alternative HLS format does not need the conversion, however due to HLS needing to buffer the files to disk, the HLS will result in lag (delay) behind real time. 
+For video without a delay, you need mjpeg and without a camera that can create it, you will need to use a lot of CPU power.
+
+An alternative way to keep the CPU load low is to use the ``snapshots.mjpeg`` feature of the binding to create a stream from the cameras snapshots instead of the RTSP stream.
+This is limited to 1 frame a second but often results in far greater picture quality, so be sure to try the different ways and choose what you prefer.
+
+The main cameras that can do mjpeg with very low CPU load are Amcrest, Dahua, Hikvision, Foscam HD and Instar HD.
+To set this up, see the special setup steps in this readme.
+The binding can then distribute this stream to many devices around your home whilst the camera only sees a single open stream.
 
 To request the mjpeg stream from the binding, all you need to do is use this link changing the IP to that of your Openhab server and the SERVER_PORT to match the settings in the bindings setup for that camera. 
 ipcamera.mjpeg is not changed and stays the same for all of your cameras, it is the port that changes between multiple cameras, the rest stays the same. 
-Also see the sitemap examples below.
 
 <http://OpenhabIP:ServerPort/ipcamera.mjpeg>
 
 
-Alternatively you can use 3rd party software running on a standalone server to do the conversion. 
-Converting from h264 to mjpeg takes a lot of CPU power to handle the conversion, so it may be better to use HLS format as this will use h264 and not require a conversion that needs CPU grunt. 
-You can run the open source motion software on a raspberry Pi with this project.
+For cameras without the ability to create mjpeg streams onboard, the binding is now able to create mjpeg from the cameras RTSP source if FFmpeg is installed and will use the Openhab CPU to create the stream.
+If you wish to do this for multiple cameras at the same time, then consider setting up a separate video server running a software package to remove this high CPU load off your Openhab server.
 
-<https://github.com/ccrisan/motioneyeos/wiki>
+To use this feature, all you need to do is set ``STREAM_URL_OVERRIDE="ffmpeg"`` to use your CPU to generate the mjpeg stream.
+If you leave the option blank the binding will warn you in the logs and still use ffmpeg, so by adding this line it will remove the warning from your logs.
+
+Ffmpeg may require you to lower the resolution and/or the FPS to lower the CPU load down enough to run, you may need to experiment.
+To change the settings used by this feature the binding exposes the config ``FFMPEG_MJPEG_ARGUMENTS`` which the default is currently ``-q:v 10 -r 3 -update 1`` where 10 is the jpg quality/compression setting and -r 3 is how many frames per second to try and create.
+Always try to get the default settings working first before you begin to experiment.
+ 
 
 
 **snapshots.mjpeg and autofps.mjpeg a special kind of MJPEG Stream**
 
-These features allow you to request a mjpeg stream created by the binding with low CPU usage from the cameras snapshots. 
-Snapshots are usually high resolution and look great, however they are limited to a max of 1 FPS.
-The reason this is more useful than snapshots on their own, is some UI's will flash white or black when a snapshot is refreshing, this does not happen with snapshots.mjpeg and is the same bandwidth and CPU load as just using snapshots! 
+These features allow you to request a mjpeg stream created by the binding with low CPU usage from the cameras snapshots.
+Snapshots are usually high resolution and look great, however they are limited to a max of 1 frame per second (1 FPS).
+The reason this is more useful than snapshots on their own, is some UI's will flash white or black when a snapshot is refreshing, this does not happen with snapshots.mjpeg and is the same bandwidth and CPU load as just using snapshots!
+
+The autofps.mjpeg feature will display a snapshot that updates every 8 seconds to keep network traffic low, then when motion is detected it will automatically increase the frames to every second until the motion stops.
+This means lower traffic unless the picture is actually changing. 
 
 Request the stream to be sent to an item with this url. 
 NOTE: The IP is Openhabs not your cameras IP and the 54321 is what you have set as the SERVER_PORT.
@@ -825,9 +835,9 @@ With a poll time below 9000ms
 ``Video url="http://192.168.0.32:54321/snapshots.mjpeg" encoding="mjpeg"``
 
 
-**HLS HTTP Live Streaming**
+##HLS (HTTP Live Streaming)##
 
-The channel called 'startStream' can now be used to have HLS run non stop to lower the startup delay that comes with using this type of stream. 
+A channel called 'startStream' can now be used to have HLS run non stop to lower the startup delay that comes with using this type of stream. 
 If the channel is OFF, the stream will start and stop automatically as required, but you will get a delay before the stream is fully running and this may cause you to need to ask twice for the stream.
 It can be helpful sometimes to use this line in a rule to start the stream before it is needed further on in the rule ``sendHttpGetRequest("http://192.168.0.2:54321/ipcamera.m3u8")`` as the stream will stay running for 60 seconds.
 This 60 second delay before the stream is stopped helps when you are moving back and forth in a UI, as the stream does not keep stopping and needing to start each time you move around the UI.

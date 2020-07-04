@@ -225,7 +225,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -249,7 +249,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -437,7 +437,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -645,7 +645,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -900,7 +900,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -1136,7 +1136,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -1366,7 +1366,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -1621,7 +1621,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 
@@ -1866,7 +1866,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
-<default>-qscale:v 5 -r 6 -update 1</default>
+<default>-q:v 10 -r 3 -update 1</default>
 <advanced>true</advanced>
 </parameter>
 

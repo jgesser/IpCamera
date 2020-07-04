@@ -49,9 +49,8 @@ public class Ffmpeg {
     public void setKeepAlive(int seconds) {
         if (seconds == -1) {
             keepAlive = -1;
-        } else {// if (keepAlive != -1) {
-            keepAlive = seconds
-                    / (Integer.parseInt(ipCameraHandler.config.get(CONFIG_POLL_CAMERA_MS).toString()) / 1000);
+        } else {// We now poll every 8 seconds due to mjpeg stream requirement.
+            keepAlive = 8; // 64 seconds approx.
         }
     }
 

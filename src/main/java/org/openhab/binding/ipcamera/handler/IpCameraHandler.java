@@ -169,7 +169,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private LinkedList<byte[]> fifoSnapshotBuffer = new LinkedList<byte[]>();
     private int preroll, postroll, snapCount = 0;
     private boolean updateImageChannel = false;
-    private int updateCounter = 0;
+    private boolean updateAutoFps = false;
     private byte lowPriorityCounter = 0;
     public String hostIp = "0.0.0.0";
     private String ffmpegOutputFolder = "";
@@ -212,6 +212,7 @@ public class IpCameraHandler extends BaseThingHandler {
     public boolean motionAlarmEnabled = false;
     public boolean audioAlarmEnabled = false;
     public boolean ffmpegSnapshotGeneration = false;
+    boolean snapshotPolling = false;
     public OnvifConnection onvifCamera = new OnvifConnection(this, "", "", "");
 
     public IpCameraHandler(Thing thing) {
@@ -611,25 +612,16 @@ public class IpCameraHandler extends BaseThingHandler {
 
     public void processSnapshot() {
         lockCurrentSnapshot.lock();
-        if (updateImageChannel) {
-            updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
-        }
-        if (firstMotionAlarm || firstAudioAlarm || motionAlarmUpdateSnapshot || audioAlarmUpdateSnapshot) {
-            updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
-        }
 
         if (streamingSnapshotMjpeg) {
             sendMjpegFrame(currentSnapshot, snapshotMjpegChannelGroup);
         }
         if (streamingAutoFps) {
-            if (updateCounter++ > 200) {
-                updateCounter = 1;
-            }
             if (motionDetected) {
                 sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
-                updateCounter = 4;// when motion ends give it half the time before a new snapshot is used.
-            } else if (updateCounter % 8 == 0) {
+            } else if (updateAutoFps) {
                 sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
+                updateAutoFps = false;
             }
         }
         if (preroll > 0) {
@@ -638,6 +630,13 @@ public class IpCameraHandler extends BaseThingHandler {
                 fifoSnapshotBuffer.removeFirst();
             }
         }
+
+        if (updateImageChannel) {
+            updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
+        } else if (firstMotionAlarm || firstAudioAlarm || motionAlarmUpdateSnapshot || audioAlarmUpdateSnapshot) {
+            updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
+        }
+
         lockCurrentSnapshot.unlock();
     }
 
@@ -982,15 +981,18 @@ public class IpCameraHandler extends BaseThingHandler {
                 sendMjpegFrame(currentSnapshot, snapshotMjpegChannelGroup);
                 lockCurrentSnapshot.unlock();
                 streamingSnapshotMjpeg = true;
+                startSnapshotPolling();
             }
         } else {
             snapshotMjpegChannelGroup.remove(ctx.channel());
             autoSnapshotMjpegChannelGroup.remove(ctx.channel());
             if (streamingSnapshotMjpeg && snapshotMjpegChannelGroup.isEmpty()) {
                 streamingSnapshotMjpeg = false;
+                stopSnapshotPolling();
                 logger.debug("All Snapshot based MJPEG streams have stopped.");
             } else if (streamingAutoFps && autoSnapshotMjpegChannelGroup.isEmpty()) {
                 streamingAutoFps = false;
+                stopSnapshotPolling();
                 logger.debug("All AutoFps Snapshot based MJPEG streams have stopped.");
             }
         }
@@ -1254,12 +1256,18 @@ public class IpCameraHandler extends BaseThingHandler {
         firstMotionAlarm = false;
         motionAlarmUpdateSnapshot = false;
         motionDetected = false;
+        if (streamingAutoFps) {
+            stopSnapshotPolling();
+        }
     }
 
     public void motionDetected(String thisAlarmsChannel) {
         updateState(CHANNEL_LAST_MOTION_TYPE, new StringType(thisAlarmsChannel));
         updateState(thisAlarmsChannel, OnOffType.valueOf("ON"));
         motionDetected = true;
+        if (streamingAutoFps) {
+            startSnapshotPolling();
+        }
         if (updateImageEvents.contains("2")) {
             if (!firstMotionAlarm) {
                 sendHttpGET(snapshotUri);
@@ -1609,8 +1617,15 @@ public class IpCameraHandler extends BaseThingHandler {
             cameraConnection.shutdown();
             cameraConnection = Executors.newScheduledThreadPool(1);
         }
-        pollCameraJob = pollCamera.scheduleAtFixedRate(pollingCamera, 4000,
-                Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
+
+        if (preroll > 0 || updateImageEvents.contains("1")) {
+            snapshotPolling = true;
+            snapshotJob = snapshot.scheduleAtFixedRate(snapshotRunnable, 4000,
+                    Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
+        }
+
+        pollCameraJob = pollCamera.scheduleWithFixedDelay(pollCameraRunnable, 4000, 8000, TimeUnit.MILLISECONDS);
+
         if (!rtspUri.equals("")) {
             updateState(CHANNEL_RTSP_URL, new StringType(rtspUri));
         }
@@ -1713,57 +1728,74 @@ public class IpCameraHandler extends BaseThingHandler {
     Runnable snapshotRunnable = new Runnable() {
         @Override
         public void run() {
-
             // Snapshot should be first to keep consistent time between shots
             if (!snapshotUri.equals("")) {
-                if (updateImageEvents.contains("1") || updateImageChannel) {
+                if (updateImageEvents.contains("1") || streamingSnapshotMjpeg || streamingAutoFps) {
                     sendHttpGET(snapshotUri);
                 } else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
                     sendHttpGET(snapshotUri);
-                    updateCounter = 5;
+                    // updateCounter = 5;
                     shortAudioAlarm = false;
                 } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
                     sendHttpGET(snapshotUri);
-                    updateCounter = 5;
+                    // updateCounter = 5;
                     shortMotionAlarm = false;
                 }
-            }
-
-            if (thing.getThingTypeUID().getId().equals("ONVIF")) {
-                onvifCamera.pollMessages();
             }
             if (snapCount > 0) {
                 if (--snapCount == 0) {
                     setupFfmpegFormat("GIF");
                 }
             }
-
         }
     };
 
-    Runnable pollingCamera = new Runnable() {
+    public void stopSnapshotPolling() {
+        if (!streamingSnapshotMjpeg && preroll == 0 && !updateImageEvents.contains("1")) {
+            snapshotPolling = false;
+            if (snapshotJob != null) {
+                snapshotJob.cancel(true);
+            }
+        }
+    }
+
+    public void startSnapshotPolling() {
+        if (snapshotPolling) {
+            return; // Already polling
+        }
+        if (streamingSnapshotMjpeg || streamingAutoFps) {
+            snapshotPolling = true;
+            snapshotJob = snapshot.scheduleAtFixedRate(snapshotRunnable, 200,
+                    Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // runs every 8 seconds due to mjpeg streams not staying open unless they update this often.
+    Runnable pollCameraRunnable = new Runnable() {
         @Override
         public void run() {
             // Snapshot should be first to keep consistent time between shots
             if (!snapshotUri.equals("")) {
-                if (updateImageEvents.contains("1") || updateImageChannel) {
+                if (updateImageChannel) {
                     sendHttpGET(snapshotUri);
-                } else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
+                }
+                if (streamingAutoFps && !snapshotPolling) {
+                    updateAutoFps = true;
                     sendHttpGET(snapshotUri);
-                    updateCounter = 5;
-                    shortAudioAlarm = false;
-                } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
-                    sendHttpGET(snapshotUri);
-                    updateCounter = 5;
-                    shortMotionAlarm = false;
                 }
             }
             // NOTE: Use lowPriorityRequests if get request is not needed every poll.
+            if (!lowPriorityRequests.isEmpty()) {
+                if (lowPriorityCounter >= lowPriorityRequests.size()) {
+                    lowPriorityCounter = 0;
+                }
+                sendHttpGET(lowPriorityRequests.get(lowPriorityCounter++));
+            }
+            // what needs to be done every poll//
             switch (thing.getThingTypeUID().getId()) {
                 case "HTTPONLY":
                     break;
                 case "ONVIF":
-                    onvifCamera.pollMessages();
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
@@ -1790,12 +1822,6 @@ public class IpCameraHandler extends BaseThingHandler {
                     }
                     break;
             }
-            if (!lowPriorityRequests.isEmpty()) {
-                if (lowPriorityCounter >= lowPriorityRequests.size()) {
-                    lowPriorityCounter = 0;
-                }
-                sendHttpGET(lowPriorityRequests.get(lowPriorityCounter++));
-            }
             if (ffmpegHLS != null) {
                 ffmpegHLS.checkKeepAlive();
             }
@@ -1804,12 +1830,6 @@ public class IpCameraHandler extends BaseThingHandler {
                         "There are {} channels being tracked, cleaning out old channels now to try and reduce this to 12 or below.",
                         listOfRequests.size());
                 cleanChannels();
-            }
-
-            if (snapCount > 0) {
-                if (--snapCount == 0) {
-                    setupFfmpegFormat("GIF");
-                }
             }
         }
     };
@@ -1913,8 +1933,8 @@ public class IpCameraHandler extends BaseThingHandler {
             logger.warn(
                     "The Image channel is set to update more often than 8 seconds. This is not recommended. The Image channel is best used only for higher poll times. See the readme file on how to display the cameras picture for best results or use a higher poll time.");
         }
-        // Waiting for ONVIF to discover the urls and get setup before running.
-        cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 3, 58, TimeUnit.SECONDS);
+        // Waiting 3 seconds for ONVIF to discover the urls before running.
+        cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 3, 28, TimeUnit.SECONDS);
     }
 
     // What the camera needs to re-connect if the initialize() is not called.
@@ -1940,6 +1960,7 @@ public class IpCameraHandler extends BaseThingHandler {
     // Called when camera goes offline but the main handler is not destroyed.
     private void restart() {
         isOnline = false;
+        snapshotPolling = false;
         onvifCamera.sendEventRequest("Unsubscribe");
         onvifCamera.disconnect();
         if (pollCameraJob != null) {
@@ -1947,6 +1968,12 @@ public class IpCameraHandler extends BaseThingHandler {
             pollCamera.shutdown();
             pollCamera = Executors.newScheduledThreadPool(1);
             pollCameraJob = null;
+        }
+        if (snapshotJob != null) {
+            snapshotJob.cancel(true);
+            snapshot.shutdown();
+            snapshot = Executors.newScheduledThreadPool(1);
+            snapshotJob = null;
         }
         if (cameraConnectionJob != null) {
             cameraConnectionJob.cancel(true);

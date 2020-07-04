@@ -83,7 +83,7 @@ public class OnvifConnection {
     String rtspUri = "";
     IpCameraHandler ipCameraHandler;
     boolean useEvents = false;
-    boolean pullMessages = false;
+    // boolean pullMessages = false;
 
     // These hold the cameras PTZ position in the range that the camera uses, ie
     // mine is -1 to +1
@@ -117,13 +117,6 @@ public class OnvifConnection {
         }
     }
 
-    public void pollMessages() {
-        if (pullMessages) {
-            sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
-            pullMessages = false;
-        }
-    }
-
     String getXml(String requestType) {
         switch (requestType) {
             case "AbsoluteMove":
@@ -151,11 +144,11 @@ public class OnvifConnection {
             case "ContinuousMoveUp":
                 return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"-0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
             case "ContinuousMoveDown":
                 return "<ContinuousMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"-0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
+                        + "</ProfileToken><Velocity><PanTilt x=\"0\" y=\"0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
             case "Stop":
                 return "<Stop xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
@@ -255,8 +248,7 @@ public class OnvifConnection {
         logger.trace("Onvif reply is:{}", message);
         if (message.contains("PullMessagesResponse")) {
             eventRecieved(message);
-            pullMessages = true;// Next Poll period the PullMessages request will be sent.
-            // sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
+            sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
             // sendOnvifRequest(requestBuilder("Renew", eventXAddr));
         } else if (message.contains("GetSystemDateAndTimeResponse")) {// 1st to be sent.
             sendOnvifRequest(requestBuilder("GetCapabilities", deviceXAddr));
@@ -284,8 +276,7 @@ public class OnvifConnection {
         } else if (message.contains("CreatePullPointSubscriptionResponse")) {
             subscriptionXAddr = removeIPfromUrl(fetchXML(message, "SubscriptionReference>", "Address>"));
             logger.debug("subscriptionXAddr={}", subscriptionXAddr);
-            pullMessages = true;// Next Poll period the PullMessages request will be sent.
-            // sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
+            sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
         } else if (message.contains("GetStatusResponse")) {
             processPTZLocation(message);
         } else if (message.contains("GetPresetsResponse")) {
