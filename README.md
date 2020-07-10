@@ -57,8 +57,7 @@ Please read the special notes for Dahua as they will apply.
 
 + Each alarm you wish to use must have "Notify Surveillance Center" enabled under each alarms settings in the control panel of the camera itself. 
 
-+ The CGI/API and also ONVIF are disabled by default on these cameras, so enable and create user details for ONVIF that are the same user/pass as what you have given the binding. 
-If your camera does not have PTZ then you can leave ONVIF disabled and just enable the CGI/API.
++ The CGI/API and also ONVIF are disabled by default on these cameras, so enable and create user details for ONVIF that are the same user/pass as what you have given the binding. If your camera does not have PTZ then you can leave ONVIF disabled and just enable the CGI/API.
 
 If you need a channel or control updated in case you have made a change with the cameras app, you can call a refresh on it by using a cron rule.
 
@@ -613,15 +612,22 @@ To move a camera with this binding you need an ONVIF camera that supports one of
 
 + Absolute movements
 + Relative movements
-+ Continuous movements
++ Continuous movements  
 + Presets
 
 
-To test your cameras compatibility out and also to create some preset locations use a free program called ``onvif device manager``. 
-After creating or changing the presets it may be necessary to restart the binding before they can be used. 
+To test your cameras compatibility out and also to create some preset locations, use a free program called ``onvif device manager`` (ODM for short).
+Not all Onvif cameras work with all of the methods, so testing first to confirm what works is a good idea and the presets can not be created with the binding, only loaded after they are already created.
+After creating new or changing existing presets, it may be necessary to restart the binding before they can be used. 
 You can create names using the mappings feature of the selection element.
-
 See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
+
+Moving the camera using Relative or Continuous (the config ``PTZ_CONTINUOUS`` must be true) movements can be done by sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels.
+When the config is set to false (the default if not specified) the binding will send Relative movements. 
+There are some widgets created in the Habpanel widget gallery that you can download and use right away saving you time if your camera supports either presets, relative or continuous modes.
+For sitemaps the ``Setpoint`` buttons will send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
+The OFF command (can be sent to any of the PTZ channels) will stop the cameras movements in the case of continuous being selected in the things config setup.
+
 
 
 
@@ -665,11 +671,6 @@ TestCamPan.sendCommand(22)
 TestCamTilt.sendCommand(60)
 TestCamZoom.sendCommand(0)
 ```
-
-Moving the camera using Relative/Continuous movements can be done sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels. The OFF command will stop the cameras movements in the case of continuous has been selected in the things config setup. 
-These methods make the most sense if you wish to push arrow buttons on a Habpanel screen to move the camera.
-There are some widgets created in the gallery that you can download and use right away saving you time. 
-The Setpoint buttons send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
 
 
 
@@ -744,9 +745,11 @@ sudo apt update && sudo apt install ffmpeg
 
 The binding can now use FFmpeg to create a recording to a file.
 To do this:
+
 + Consider setting the String channel that is called `mp4Filename` to a date and time stamp in a format that you like, or leave the channel empty for the filename to default to `ipcamera.mp4`.
 + Change the Number channel called `recordMp4` to a number of how many seconds that you wish to record for. The recording will then start.
 + Once the file is created the channel `recordMp4` will change itself back to 0 which can be used to trigger a rule to send the file, or you could use this event to change a counter variable that is used in the filename to create `visitor1.mp4 visitor2.mp4`.
+
 
 *.items
 
@@ -861,15 +864,10 @@ To use the HLS steaming features, you need to:
 1. Set a valid ``SERVER_PORT`` as the default value of -1 will turn the feature off.
 2. The audio format in the cameras settings must be AAC and not missing for Chromecast to work. The binding will default to creating a silent AAC audio track which should be used until you have a working setup.
 3. Ensure FFmpeg is installed.
-4. For cameras that do not auto detect the H264 stream which is done for ONVIF cameras, you will need to use the ``FFMPEG_INPUT`` and provide a http or rtsp link.
-This is used for HLS and many other features like the animated GIF.
-5. For Onvif cameras the ``ONVIF_MEDIA_PROFILE`` needs to match the stream number you have setup for h264. 
-This is usually 0 and is the main-stream, the higher numbers are the sub-streams if your camera has any. 
-For non Onvif cameras you just need to check the url in the last step works and is provided to the binding.
+4. For cameras that do not auto detect the H264 stream which is done for ONVIF cameras, you will need to use the ``FFMPEG_INPUT`` and provide a http or rtsp link. This is used for HLS and many other features like the animated GIF.
+5. For Onvif cameras the ``ONVIF_MEDIA_PROFILE`` needs to match the stream number you have setup for h264. This is usually 0 and is the main-stream, the higher numbers are the sub-streams if your camera has any. For non Onvif cameras you just need to check the url in the last step works and is provided to the binding.
 6. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a standard resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format. 
-7. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder.
-Only a small amount of storage is needed.
-I use micro SD cards and a ramdrive and have excellent performance.
+7. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder. Only a small amount of storage is needed. I use micro SD cards and a ramdrive and have excellent performance.
 
 
 **Ram drive setup**

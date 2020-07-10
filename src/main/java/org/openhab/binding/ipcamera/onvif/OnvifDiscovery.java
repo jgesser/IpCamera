@@ -59,7 +59,7 @@ import io.netty.util.CharsetUtil;
 @NonNullByDefault
 public class OnvifDiscovery {
     IpCameraDiscoveryService ipCameraDiscoveryService;
-    private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
+    private final Logger logger = LoggerFactory.getLogger(OnvifDiscovery.class);
     public ArrayList<DatagramPacket> listOfReplys = new ArrayList<DatagramPacket>(10);
 
     public OnvifDiscovery(IpCameraDiscoveryService ipCameraDiscoveryService) {

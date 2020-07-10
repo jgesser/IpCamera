@@ -13,7 +13,7 @@
 
 package org.openhab.binding.ipcamera.onvif;
 
-import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CHANNEL_MOTION_ALARM;
+import static org.openhab.binding.ipcamera.IpCameraBindingConstants.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -47,7 +47,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -162,7 +161,7 @@ public class OnvifConnection {
                         + mediaProfileTokens.get(mediaProfileIndex)
                         + "</ProfileToken><Velocity><Zoom x=\"-0.5\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Velocity></ContinuousMove>";
             case "CreatePullPointSubscription":
-                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT10M</InitialTerminationTime></CreatePullPointSubscription>";
+                return "<CreatePullPointSubscription xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><InitialTerminationTime>PT60M</InitialTerminationTime></CreatePullPointSubscription>";
             case "GetCapabilities":
                 return "<GetCapabilities xmlns=\"http://www.onvif.org/ver10/device/wsdl\"><Category>All</Category></GetCapabilities>";
 
@@ -185,7 +184,7 @@ public class OnvifConnection {
             case "Unsubscribe":// not tested
                 return "<Unsubscribe xmlns=\"http://docs.oasis-open.org/wsn/b-2/\"></Unsubscribe>";
             case "PullMessages":
-                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT30S</Timeout><MessageLimit>1</MessageLimit></PullMessages>";
+                return "<PullMessages xmlns=\"http://www.onvif.org/ver10/events/wsdl\"><Timeout>PT60S</Timeout><MessageLimit>1</MessageLimit></PullMessages>";
             case "GetEventProperties":
                 return "<GetEventProperties xmlns=\"http://www.onvif.org/ver10/events/wsdl\"/>";
             case "RelativeMoveLeft":
@@ -214,7 +213,7 @@ public class OnvifConnection {
                         + mediaProfileTokens.get(mediaProfileIndex)
                         + "</ProfileToken><Translation><Zoom x=\"-0.0240506344\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "Renew":
-                return "<Renew xmlns=\"http://docs.oasis-open.org/wsn/b-2\"><TerminationTime>PT10M</TerminationTime></Renew>";
+                return "<Renew xmlns=\"http://docs.oasis-open.org/wsn/b-2\"><TerminationTime>PT60S</TerminationTime></Renew>";
             case "GetConfigurations":
                 return "<GetConfigurations xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"></GetConfigurations>";
             case "GetConfigurationOptions":
@@ -243,6 +242,11 @@ public class OnvifConnection {
         }
         return "notfound";
     }
+
+    // public void pullMessages() {
+    // sendOnvifRequest(requestBuilder("CreatePullPointSubscription", eventXAddr));
+    // sendOnvifRequest(requestBuilder("PullMessages", subscriptionXAddr));
+    // }
 
     public void processReply(String message) {
         logger.trace("Onvif reply is:{}", message);
@@ -340,21 +344,23 @@ public class OnvifConnection {
         }
 
         FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("POST"), xAddr);
-        request.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/soap+xml");
+        request.headers().add("Content-Type", "application/soap+xml");
         request.headers().add("charset", "utf-8");
         if (onvifPort != 80) {
-            request.headers().set(HttpHeaderNames.HOST, ipAddress + ":" + onvifPort);
+            request.headers().set("Host", ipAddress + ":" + onvifPort);
         } else {
-            request.headers().set(HttpHeaderNames.HOST, ipAddress);
+            request.headers().set("Host", ipAddress);
         }
-        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-        request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, "gzip, deflate");
+        request.headers().set("Connection", HttpHeaderValues.CLOSE);
+        request.headers().set("Accept-Encoding", "gzip, deflate");
         String fullXml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"" + extraEnvelope + ">"
                 + headers
                 + "<s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">"
                 + getXml(requestType) + "</s:Body></s:Envelope>";
+        String actionString = fetchXML(getXml(requestType), requestType, "xmlns=\"");
+        request.headers().add("SOAPAction", "\"" + actionString + "/" + requestType + "\"");
         ByteBuf bbuf = Unpooled.copiedBuffer(fullXml, StandardCharsets.UTF_8);
-        request.headers().set(HttpHeaderNames.CONTENT_LENGTH, bbuf.readableBytes());
+        request.headers().set("Content-Length", bbuf.readableBytes());
         request.content().clear().writeBytes(bbuf);
         return request;
     }
@@ -434,7 +440,7 @@ public class OnvifConnection {
             bootstrap = new Bootstrap();
             bootstrap.group(mainEventLoopGroup);
             bootstrap.channel(NioSocketChannel.class);
-            bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+            bootstrap.option(ChannelOption.SO_KEEPALIVE, false);
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
             bootstrap.option(ChannelOption.SO_SNDBUF, 1024 * 8);
             bootstrap.option(ChannelOption.SO_RCVBUF, 1024 * 1024);
@@ -443,7 +449,7 @@ public class OnvifConnection {
 
                 @Override
                 public void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, 600));
+                    socketChannel.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, 70));
                     socketChannel.pipeline().addLast("HttpClientCodec", new HttpClientCodec());
                     socketChannel.pipeline().addLast("OnvifCodec", new OnvifCodec(getHandle()));
                 }
@@ -492,32 +498,45 @@ public class OnvifConnection {
     }
 
     public void eventRecieved(String eventMessage) {
-        logger.debug("Onvif eventRecieved : {}", eventMessage);
-        if (eventMessage.contains("Name=\"IsMotion\" Value=\"true\"")) {
-            ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-        } else if (eventMessage.contains("Name=\"IsMotion\" Value=\"false\"")) {
-            ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+        logger.trace("Onvif eventRecieved : {}", eventMessage);
+        String topic = fetchXML(eventMessage, "Topic", "tns1:");
+        String dataName = fetchXML(eventMessage, "tt:Data", "Name=\"");
+        String dataValue = fetchXML(eventMessage, "tt:Data", "Value=\"");
+        logger.debug("Onvif Event is Topic:{}, Data:{}, Value:{}", topic, dataName, dataValue);
+        switch (topic) {
+            case "VideoSource/MotionAlarm":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.motionDetected(CHANNEL_PIR_ALARM);
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.noMotionDetected(CHANNEL_PIR_ALARM);
+                }
+                break;
+            case "RuleEngine/CellMotionDetector/Motion":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                }
+                break;
+            case "AudioAnalytics/Audio/DetectedSound":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.audioDetected();
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.noAudioDetected();
+                }
+                break;
+            default:
+                try {
+                    Thread.sleep(1000);
+                    // sendOnvifRequest(requestBuilder("Renew", eventXAddr));
+                } catch (InterruptedException e) {
+                }
         }
-        if (eventMessage.contains("Name=\"IsSoundDetected\" Value=\"true\"")) {
-            ipCameraHandler.audioDetected();
-        } else if (eventMessage.contains("Name=\"IsSoundDetected\" Value=\"false\"")) {
-            ipCameraHandler.noAudioDetected();
-        }
-        /*
-         * if (eventMessage.contains("VideoSource/MotionAlarm")) { // PIR alarm from a HIK
-         * if (eventMessage.contains("SimpleItem Name=\"State\" Value=\"true\"")) {
-         * ipCameraHandler.motionDetected(CHANNEL_PIR_ALARM);
-         * } else if (eventMessage.contains("SimpleItem Name=\"State\" Value=\"false\"")) {
-         * ipCameraHandler.noMotionDetected(CHANNEL_PIR_ALARM);
-         * }
-         * }
-         */
     }
 
     public void connect(boolean useEvents) {
         sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
         this.useEvents = useEvents;
-        // sendOnvifRequest(requestBuilder("GetDeviceInformation", deviceXAddr));
     }
 
     public boolean isConnected() {
@@ -609,12 +628,12 @@ public class OnvifConnection {
             sectionHeaderBeginning = message.indexOf(sectionHeading);
         }
         if (sectionHeaderBeginning == -1) {
-            logger.debug("{} was not found in :{}", sectionHeading, message);
+            // logger.trace("{} was not found in :{}", sectionHeading, message);
             return "";
         }
         int startIndex = message.indexOf(key, sectionHeaderBeginning + sectionHeading.length());
         if (startIndex == -1) {
-            logger.debug("{} was not found in :{}", key, message);
+            // logger.trace("{} was not found in :{}", key, message);
             return "";
         }
         int endIndex = message.indexOf("<", startIndex + key.length());

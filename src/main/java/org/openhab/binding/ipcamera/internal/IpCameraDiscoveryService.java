@@ -56,10 +56,6 @@ public class IpCameraDiscoveryService extends AbstractDiscoveryService {
         super.deactivate();
     }
 
-    public void log(String message) {
-        logger.info(message);
-    }
-
     public void newCameraFound(String brand, String hostname, int onvifPort) {
         ThingTypeUID thingtypeuid = new ThingTypeUID("ipcamera", brand);
         ThingUID thingUID = new ThingUID(thingtypeuid, hostname.replace(".", ""));

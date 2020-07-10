@@ -97,9 +97,7 @@
 	<thing-type id="HTTPONLY">
 		<label>"HTTPONLY" Generic IP camera with only HTTP support.</label>
 		<description>Use when your camera is not ONVIF compatible.</description>
-		<channels>
-		<channel id="image" typeId="image"/>
-		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channels>		
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
@@ -116,6 +114,8 @@
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
 		<channel id="hlsUrl" typeId="hlsUrl"/>
+		<channel id="image" typeId="image"/>
+        <channel id="updateImageNow" typeId="updateImageNow"/>
 		</channels>
 <config-description>
 
@@ -315,9 +315,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 	<thing-type id="ONVIF">
 		<label>"ONVIF" Generic IP camera with ONVIF support.</label>
 		<description>Use when the binding does not list your brand of ONVIF compatible Camera</description>
-		<channels>
-		<channel id="image" typeId="image"/>
-		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channels>		
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="gifFilename" typeId="gifFilename"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
@@ -338,7 +336,9 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channel id="streamUrl" typeId="streamUrl"/>
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
-		<channel id="hlsUrl" typeId="hlsUrl"/>	
+		<channel id="hlsUrl" typeId="hlsUrl"/>
+		<channel id="image" typeId="image"/>
+        <channel id="updateImageNow" typeId="updateImageNow"/>	
 		</channels>
 		<config-description>
 
@@ -2028,8 +2028,8 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <channel-type id="recordMp4">
 <item-type>Number</item-type>
-<label>Record to MP4</label>
-<description>Set this channel to a number of how many seconds you wish to record for. When the file is created the channel will change to 0 by itself.</description>
+<label>MP4 Record (Seconds)</label>
+<description>Set this channel to how many seconds you wish to record for. When the file is created the channel will change to 0 by itself.</description>
 <category>Time</category>
 <state min="0" max="10800" step="1" pattern="%.1f Seconds" readOnly="false" />
 </channel-type>

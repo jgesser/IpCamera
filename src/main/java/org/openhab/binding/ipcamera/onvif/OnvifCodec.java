@@ -15,6 +15,8 @@ package org.openhab.binding.ipcamera.onvif;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,6 +33,7 @@ import io.netty.util.ReferenceCountUtil;
  */
 @NonNullByDefault
 public class OnvifCodec extends ChannelDuplexHandler {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     String incomingMessage = "";
     OnvifConnection onvifConnection;
 
@@ -59,5 +62,6 @@ public class OnvifCodec extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) {
+        logger.debug("Exception on ONVIF connection: {}", cause);
     }
 }

@@ -42,6 +42,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.library.types.IncreaseDecreaseType;
@@ -118,7 +119,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
  * @author Matthew Skinner - Initial contribution
  */
 
-// @NonNullByDefault
+@NonNullByDefault
 // @SuppressWarnings("null")
 public class IpCameraHandler extends BaseThingHandler {
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<ThingTypeUID>(
@@ -212,7 +213,7 @@ public class IpCameraHandler extends BaseThingHandler {
     public boolean motionAlarmEnabled = false;
     public boolean audioAlarmEnabled = false;
     public boolean ffmpegSnapshotGeneration = false;
-    boolean snapshotPolling = false;
+    public boolean snapshotPolling = false;
     public OnvifConnection onvifCamera = new OnvifConnection(this, "", "", "");
 
     public IpCameraHandler(Thing thing) {
@@ -744,7 +745,7 @@ public class IpCameraHandler extends BaseThingHandler {
                                 // testing next line and if works need to do a full cleanup of this function.
                                 closeConnection = true;
                                 if (closeConnection) {
-                                    logger.trace("Snapshot recieved: Binding will now close the channel.");
+                                    // logger.trace("Snapshot recieved: Binding will now close the channel.");
                                     ctx.close();
                                 } else {
                                     lock.lock();
@@ -947,7 +948,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     });
                     serverFuture = serverBootstrap.bind().sync();
                     serverFuture.await(4000);
-                    logger.info("File server for camera at {} has started on port {} for all NIC's.", ipAddress,
+                    logger.debug("File server for camera at {} has started on port {} for all NIC's.", ipAddress,
                             serverPort);
                     updateState(CHANNEL_STREAM_URL,
                             new StringType("http://" + hostIp + ":" + serverPort + "/ipcamera.mjpeg"));
@@ -1347,7 +1348,6 @@ public class IpCameraHandler extends BaseThingHandler {
         return "";
     }
 
-    @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (command.toString() == "REFRESH") {
@@ -1613,18 +1613,18 @@ public class IpCameraHandler extends BaseThingHandler {
         listOfOnlineCameraHandlers.add(this);
         listOfOnlineCameraUID.add(getThing().getUID().getId());
         if (cameraConnectionJob != null) {
-            cameraConnectionJob.cancel(true);
-            cameraConnection.shutdown();
-            cameraConnection = Executors.newScheduledThreadPool(1);
+            cameraConnectionJob.cancel(false);
+            // cameraConnection.shutdown();
+            // cameraConnection = Executors.newScheduledThreadPool(1);
         }
 
         if (preroll > 0 || updateImageEvents.contains("1")) {
             snapshotPolling = true;
-            snapshotJob = snapshot.scheduleAtFixedRate(snapshotRunnable, 4000,
+            snapshotJob = snapshot.scheduleAtFixedRate(snapshotRunnable, 1000,
                     Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
         }
 
-        pollCameraJob = pollCamera.scheduleWithFixedDelay(pollCameraRunnable, 4000, 8000, TimeUnit.MILLISECONDS);
+        pollCameraJob = pollCamera.scheduleWithFixedDelay(pollCameraRunnable, 1000, 8000, TimeUnit.MILLISECONDS);
 
         if (!rtspUri.equals("")) {
             updateState(CHANNEL_RTSP_URL, new StringType(rtspUri));
@@ -1644,16 +1644,19 @@ public class IpCameraHandler extends BaseThingHandler {
     void snapshotIsFfmpeg() {
         bringCameraOnline();
         snapshotUri = "";// ffmpeg is a valid option. Simplify further checks.
-        if (updateImageEvents.equals("1")) {
-            updateImageChannel = false;
-            logger.info(
-                    "Binding has no snapshot url. Using your CPU and FFmpeg (must be manually installed) to create snapshots.");
-            ffmpegSnapshotGeneration = true;
-            if (!rtspUri.equals("")) {
-                setupFfmpegFormat("SNAPSHOT");
-                updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
-            }
+        // if (updateImageEvents.equals("1")) {
+        updateImageChannel = false;
+        logger.info(
+                "Binding has no snapshot url. Will now use your CPU and FFmpeg (must be installed) to create snapshots from RTSP.");
+        ffmpegSnapshotGeneration = true;
+        if (!rtspUri.equals("")) {
+            setupFfmpegFormat("SNAPSHOT");
+            updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
+        } else {
+            cameraConfigError(
+                    "Binding can not find a RTSP url for this camera, please OVERRIDE the url as per the readme.");
         }
+        // }
     }
 
     Runnable pollingCameraConnection = new Runnable() {
@@ -1729,19 +1732,22 @@ public class IpCameraHandler extends BaseThingHandler {
         @Override
         public void run() {
             // Snapshot should be first to keep consistent time between shots
-            if (!snapshotUri.equals("")) {
-                if (updateImageEvents.contains("1") || streamingSnapshotMjpeg || streamingAutoFps) {
-                    sendHttpGET(snapshotUri);
-                } else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
-                    sendHttpGET(snapshotUri);
-                    // updateCounter = 5;
-                    shortAudioAlarm = false;
-                } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
-                    sendHttpGET(snapshotUri);
-                    // updateCounter = 5;
-                    shortMotionAlarm = false;
-                }
-            }
+            // if (!snapshotUri.isEmpty()) {
+            sendHttpGET(snapshotUri);
+            // }
+
+            /*
+             * else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
+             * sendHttpGET(snapshotUri);
+             * // updateCounter = 5;
+             * shortAudioAlarm = false;
+             * } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
+             * sendHttpGET(snapshotUri);
+             * // updateCounter = 5;
+             * shortMotionAlarm = false;
+             * }
+             * }
+             */
             if (snapCount > 0) {
                 if (--snapCount == 0) {
                     setupFfmpegFormat("GIF");
@@ -1779,8 +1785,10 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (updateImageChannel) {
                     sendHttpGET(snapshotUri);
                 }
-                if (streamingAutoFps && !snapshotPolling) {
-                    updateAutoFps = true;
+            }
+            if (streamingAutoFps) {
+                updateAutoFps = true;
+                if (!snapshotPolling) {
                     sendHttpGET(snapshotUri);
                 }
             }
@@ -1796,6 +1804,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 case "HTTPONLY":
                     break;
                 case "ONVIF":
+                    // onvifCamera.pullMessages();
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
@@ -1961,7 +1970,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private void restart() {
         isOnline = false;
         snapshotPolling = false;
-        onvifCamera.sendEventRequest("Unsubscribe");
+        // onvifCamera.sendEventRequest("Unsubscribe");
         onvifCamera.disconnect();
         if (pollCameraJob != null) {
             pollCameraJob.cancel(true);
