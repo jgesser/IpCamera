@@ -79,6 +79,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -120,7 +121,6 @@ import io.netty.util.concurrent.GlobalEventExecutor;
  */
 
 @NonNullByDefault
-// @SuppressWarnings("null")
 public class IpCameraHandler extends BaseThingHandler {
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<ThingTypeUID>(
             Arrays.asList(THING_TYPE_ONVIF, THING_TYPE_HTTPONLY, THING_TYPE_AMCREST, THING_TYPE_DAHUA,
@@ -427,14 +427,7 @@ public class IpCameraHandler extends BaseThingHandler {
     // Always use this as sendHttpGET(GET/POST/PUT/DELETE, "/foo/bar",null,false)//
     // The authHandler will use the url inside a digest string as needed.
     @SuppressWarnings("null")
-    public boolean sendHttpRequest(String httpMethod, String httpRequestURLFull, @Nullable String digestString) {
-
-        Channel ch;
-        ChannelFuture chFuture = null;
-        CommonCameraHandler commonHandler;
-        MyNettyAuthHandler authHandler;
-        AmcrestHandler amcrestHandler;
-        InstarHandler instarHandler;
+    public void sendHttpRequest(String httpMethod, String httpRequestURLFull, @Nullable String digestString) {
 
         int port = getPortFromShortenedUrl(httpRequestURLFull);
         String httpRequestURL = getTinyUrl(httpRequestURLFull);
@@ -518,97 +511,100 @@ public class IpCameraHandler extends BaseThingHandler {
             }
         }
 
-        logger.trace("Sending camera: {}: http://{}{}", httpMethod, ipAddress, httpRequestURL);
-        lock.lock();
-
-        byte indexInLists = -1;
-        try {
-            for (byte index = 0; index < listOfRequests.size(); index++) {
-                boolean done = false;
-                if (listOfRequests.get(index).equals(httpRequestURL)) {
-                    switch (listOfChStatus.get(index)) {
-                        case 2: // Open and ok to reuse
-                            ch = listOfChannels.get(index);
-                            if (ch.isOpen()) {
-                                logger.debug("Using the already open channel:{} \t{}:{}", index, httpMethod,
-                                        httpRequestURL);
-                                commonHandler = (CommonCameraHandler) ch.pipeline().get("commonHandler");
-                                commonHandler.setURL(httpRequestURLFull);
-                                authHandler = (MyNettyAuthHandler) ch.pipeline().get("authHandler");
-                                authHandler.setURL(httpMethod, httpRequestURL);
-                                ch.writeAndFlush(request);
-                                request = null;
-                                return true;
+        mainBootstrap.connect(new InetSocketAddress(ipAddress, port)).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(@Nullable ChannelFuture future) {
+                if (future == null) {
+                    return;
+                }
+                if (future.isDone() && future.isSuccess()) {
+                    logger.trace("Sending camera: {}: http://{}{}", httpMethod, ipAddress, httpRequestURL);
+                    lock.lock();
+                    byte indexInLists = -1;
+                    try {
+                        for (byte index = 0; index < listOfRequests.size(); index++) {
+                            boolean done = false;
+                            if (listOfRequests.get(index).equals(httpRequestURL)) {
+                                switch (listOfChStatus.get(index)) {
+                                    case 2: // Open and ok to reuse
+                                        Channel ch = listOfChannels.get(index);
+                                        if (ch.isOpen()) {
+                                            logger.debug("Using the already open channel:{} \t{}:{}", index, httpMethod,
+                                                    httpRequestURL);
+                                            CommonCameraHandler commonHandler = (CommonCameraHandler) ch.pipeline()
+                                                    .get("commonHandler");
+                                            commonHandler.setURL(httpRequestURLFull);
+                                            MyNettyAuthHandler authHandler = (MyNettyAuthHandler) ch.pipeline()
+                                                    .get("authHandler");
+                                            authHandler.setURL(httpMethod, httpRequestURL);
+                                            ch.writeAndFlush(request);
+                                            return;
+                                        }
+                                    case -1: // Closed
+                                        indexInLists = index;
+                                        listOfChStatus.set(indexInLists, (byte) 1);
+                                        done = true;
+                                        break;
+                                }
+                                if (done) {
+                                    break;
+                                }
                             }
-                        case -1: // Closed
-                            indexInLists = index;
-                            listOfChStatus.set(indexInLists, (byte) 1);
-                            done = true;
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+
+                    Channel ch = future.channel();
+                    CommonCameraHandler commonHandler = (CommonCameraHandler) ch.pipeline().get("commonHandler");
+                    MyNettyAuthHandler authHandler = (MyNettyAuthHandler) ch.pipeline().get("authHandler");
+                    commonHandler.setURL(httpRequestURL);
+                    authHandler.setURL(httpMethod, httpRequestURL);
+
+                    switch (thing.getThingTypeUID().getId()) {
+                        case "AMCREST":
+                            AmcrestHandler amcrestHandler = (AmcrestHandler) ch.pipeline().get("amcrestHandler");
+                            amcrestHandler.setURL(httpRequestURL);
+                            break;
+                        case "INSTAR":
+                            InstarHandler instarHandler = (InstarHandler) ch.pipeline().get("instarHandler");
+                            instarHandler.setURL(httpRequestURL);
                             break;
                     }
-                    if (done) {
-                        break;
+
+                    if (indexInLists >= 0) {
+                        lock.lock();
+                        try {
+                            listOfChannels.set(indexInLists, ch);
+                        } finally {
+                            lock.unlock();
+                        }
+                        logger.debug("Have re-opened the closed channel:{} \t{}:{}", indexInLists, httpMethod,
+                                httpRequestURL);
+                    } else {
+                        lock.lock();
+                        try {
+                            listOfRequests.add(httpRequestURL);
+                            listOfChannels.add(ch);
+                            listOfChStatus.add((byte) 1);
+                            listOfReplies.add("");
+                        } finally {
+                            lock.unlock();
+                        }
+                        logger.debug("Have opened a brand NEW channel:{} \t{}:{}", listOfRequests.size() - 1,
+                                httpMethod, httpRequestURL);
                     }
+                    ch.writeAndFlush(request);
+                    if (!isOnline) {
+                        bringCameraOnline();
+                    }
+                    return;
+                } else { // an error occured
+                    cameraCommunicationError(
+                            "Connection Timeout: Check your IP and PORT are correct and the camera can be reached.");
                 }
             }
-        } finally {
-            lock.unlock();
-        }
-
-        chFuture = mainBootstrap.connect(new InetSocketAddress(ipAddress, port));
-        // ChannelOption.CONNECT_TIMEOUT_MILLIS means this will not hang here.
-        chFuture.awaitUninterruptibly();
-
-        if (!chFuture.isSuccess()) {
-            cameraCommunicationError(
-                    "Connection Timeout: Check your IP and PORT are correct and the camera can be reached.");
-            return false;
-        }
-
-        ch = chFuture.channel();
-        commonHandler = (CommonCameraHandler) ch.pipeline().get("commonHandler");
-        authHandler = (MyNettyAuthHandler) ch.pipeline().get("authHandler");
-        commonHandler.setURL(httpRequestURL);
-        authHandler.setURL(httpMethod, httpRequestURL);
-
-        switch (thing.getThingTypeUID().getId()) {
-            case "AMCREST":
-                amcrestHandler = (AmcrestHandler) ch.pipeline().get("amcrestHandler");
-                amcrestHandler.setURL(httpRequestURL);
-                break;
-            case "INSTAR":
-                instarHandler = (InstarHandler) ch.pipeline().get("instarHandler");
-                instarHandler.setURL(httpRequestURL);
-                break;
-        }
-
-        if (indexInLists >= 0) {
-            lock.lock();
-            try {
-                listOfChannels.set(indexInLists, ch);
-            } finally {
-                lock.unlock();
-            }
-            // logger.debug("Have re-opened the closed channel:{} \t{}:{}", indexInLists, httpMethod, httpRequestURL);
-        } else {
-            lock.lock();
-            try {
-                listOfRequests.add(httpRequestURL);
-                listOfChannels.add(ch);
-                listOfChStatus.add((byte) 1);
-                listOfReplies.add("");
-            } finally {
-                lock.unlock();
-            }
-            // logger.debug("Have opened a brand NEW channel:{} \t{}:{}", listOfRequests.size() - 1, httpMethod,
-            // httpRequestURL);
-        }
-
-        ch.writeAndFlush(request);
-        // Cleanup
-        request = null;
-        chFuture = null;
-        return true;
+        });
     }
 
     public void processSnapshot() {
@@ -1667,9 +1663,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     logger.warn("Binding has not been supplied with a RTSP URL so some features will not work.");
                 }
                 if (!snapshotUri.equals("") && !snapshotUri.equals("ffmpeg")) {
-                    if (sendHttpRequest("GET", snapshotUri, null)) {
-                        bringCameraOnline();
-                    }
+                    sendHttpRequest("GET", snapshotUri, null);
                 } else {
                     snapshotIsFfmpeg();
                 }
@@ -1683,9 +1677,7 @@ public class IpCameraHandler extends BaseThingHandler {
             if (snapshotUri.equals("ffmpeg")) {
                 snapshotIsFfmpeg();
             } else if (!snapshotUri.equals("")) {
-                if (sendHttpRequest("GET", snapshotUri, null)) {
-                    bringCameraOnline();
-                }
+                sendHttpRequest("GET", snapshotUri, null);
             } else if (!rtspUri.equals("")) {
                 snapshotIsFfmpeg();
             } else {
@@ -1804,7 +1796,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 case "HTTPONLY":
                     break;
                 case "ONVIF":
-                    // onvifCamera.pullMessages();
+                    onvifCamera.pullMessages();
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
@@ -1949,28 +1941,28 @@ public class IpCameraHandler extends BaseThingHandler {
     // What the camera needs to re-connect if the initialize() is not called.
     private void resetAndRetryConnecting() {
         restart();
-        if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
-            onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
-        }
-        if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
-            if (serversLoopGroup.isShuttingDown()) {
-                try {
-                    serversLoopGroup.awaitTermination(20, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                }
-            }
-            if (serversLoopGroup.isShutdown()) {
-                startStreamServer(true);
-            }
-        }
-        cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
+        // if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
+        // onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
+        // }
+        // if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
+        // if (serversLoopGroup.isShuttingDown()) {
+        // try {
+        // serversLoopGroup.awaitTermination(20, TimeUnit.SECONDS);
+        // } catch (InterruptedException e) {
+        // }
+        // }
+        // if (serversLoopGroup.isShutdown()) {
+        // startStreamServer(true);
+        // }
+        // }
+        initialize();
+        // cameraConnectionJob = cameraConnection.schedule(pollingCameraConnection, 49, TimeUnit.SECONDS);
     }
 
     // Called when camera goes offline but the main handler is not destroyed.
     private void restart() {
         isOnline = false;
         snapshotPolling = false;
-        // onvifCamera.sendEventRequest("Unsubscribe");
         onvifCamera.disconnect();
         if (pollCameraJob != null) {
             pollCameraJob.cancel(true);

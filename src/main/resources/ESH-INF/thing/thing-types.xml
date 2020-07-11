@@ -20,8 +20,8 @@
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
@@ -64,28 +64,28 @@
 </description>
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. Default should work for Linux, but For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
@@ -125,29 +125,29 @@
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
-
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
 <description>
 <![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -157,7 +157,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">
 <label>Default UPDATE_IMAGE setting</label>
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.
 </description>
@@ -172,48 +172,48 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls ie for fetching the snapshot.
 </description>
 <default>80</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Enter a http url to where a snapshot can be seen if entered into any browser.
 </description>
 </parameter>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Full http address to where a MJPEG stream can be watched if entered into any browser.
 </description>
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Enter any HTTP or RTSP URL that ffmpeg can use as an input. Best if this is in H264 format.
 </description>
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. Default should work for Linux, but For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -221,7 +221,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -229,7 +229,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -237,7 +237,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -245,7 +245,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -253,7 +253,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -261,7 +261,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -269,7 +269,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -277,14 +277,14 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
@@ -304,12 +304,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 </description>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
+
 </config-description>
 </thing-type>
 	<thing-type id="ONVIF">
@@ -348,29 +349,29 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
-
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
 <description>
 <![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -380,14 +381,14 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">
 <label>Default UPDATE_IMAGE setting</label>
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Full http address to where a MJPEG stream can be watched if entered into any browser.
@@ -395,7 +396,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -403,21 +404,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -425,7 +426,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -433,7 +434,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -441,7 +442,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -449,7 +450,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -457,7 +458,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -465,21 +466,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave blank to use the autodetected URL for snapshots, or enter a http url to where a snapshot can be seen if entered into any browser.
@@ -495,7 +496,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
@@ -523,23 +524,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -583,19 +584,19 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>false</advanced>
 </parameter-group>
 		
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
-
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -603,7 +604,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -611,21 +612,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -633,7 +634,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -641,7 +642,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -649,7 +650,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -657,7 +658,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -665,7 +666,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -673,30 +674,31 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 		
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -706,7 +708,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -721,7 +723,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
@@ -735,7 +737,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave this empty to auto detect the snapshot url. Enter a http address if you wish to over-ride with a different address which also makes the camera connect quicker.
@@ -765,23 +767,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -838,19 +840,19 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>false</advanced>
 </parameter-group>
 		
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
-	
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -858,7 +860,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		 
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -866,21 +868,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -888,7 +890,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -896,7 +898,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -904,7 +906,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -912,7 +914,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -920,7 +922,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -928,30 +930,31 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 		
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -961,7 +964,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -984,13 +987,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave blank to use the autodetected URL for snapshots, or enter a http url to where a snapshot can be seen if entered into any browser.
@@ -1020,23 +1023,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -1074,19 +1077,19 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>false</advanced>
 </parameter-group>
 		
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
-	
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -1094,7 +1097,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -1102,21 +1105,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -1124,7 +1127,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -1132,7 +1135,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -1140,7 +1143,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -1148,7 +1151,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -1156,7 +1159,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -1164,36 +1167,41 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 		
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
+<option value="3">Start Audio Alarm (3)</option>
+<option value="23">Start of Motion and Audio Alarms (23)</option>
 <option value="4">During Motion Alarm (4)</option>
+<option value="5">During Audio Alarm (5)</option>
+<option value="45">During Motion and Audio Alarms (45)</option>
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -1208,13 +1216,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave this empty to auto detect the snapshot url. Enter a http address if you wish to over-ride with a different address which also makes the camera connect quicker.
@@ -1244,23 +1252,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -1303,20 +1311,20 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>Settings required to connect to the camera.</description>
 <advanced>false</advanced>
 </parameter-group>
-		
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>	
 
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -1324,7 +1332,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -1332,21 +1340,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -1354,7 +1362,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -1362,7 +1370,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -1370,7 +1378,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -1378,7 +1386,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -1386,7 +1394,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -1394,30 +1402,31 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 		
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -1427,7 +1436,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -1442,13 +1451,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>88</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave blank to use the autodetected URL for snapshots, or enter a http url to where a snapshot can be seen if entered into any browser.
@@ -1492,23 +1501,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -1558,20 +1567,20 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>Settings required to connect to the camera.</description>
 <advanced>false</advanced>
 </parameter-group>
-		
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>
 
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -1579,7 +1588,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. 
@@ -1587,21 +1596,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -1609,7 +1618,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -1617,7 +1626,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -1625,7 +1634,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -1633,7 +1642,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -1641,7 +1650,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -1649,30 +1658,31 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 		
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
 <option value="2">Start Motion Alarm (2)</option>
 <option value="3">Start Audio Alarm (3)</option>
 <option value="23">Start of Motion and Audio Alarms (23)</option>
@@ -1682,7 +1692,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -1697,7 +1707,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
@@ -1711,7 +1721,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave blank to use the autodetected URL for snapshots, or enter a http url to where a snapshot can be seen if entered into any browser.
@@ -1741,23 +1751,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 
 </config-description>
@@ -1804,19 +1814,19 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter-group name="Image Settings">
-<label>Snapshot/Image Settings</label>
-<description>Settings for the snapshot features.</description>
-<advanced>false</advanced>
-</parameter-group>	 
-
-<parameter-group name="Streaming Setup">
-<label>Stream Settings</label>
+<parameter-group name="FFmpeg Setup">
+<label>FFmpeg Settings</label>
 <description>Settings that setup or effect the video stream.</description>
 <advanced>false</advanced>
 </parameter-group>
 
-<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Streaming Setup">
+<parameter-group name="Image ch Settings">
+<label>Image channel settings</label>
+<description>Settings for the image channel features which is not recommended to be used. See readme for more info.</description>
+<advanced>true</advanced>
+</parameter-group>
+
+<parameter name="STREAM_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>STREAM_URL_OVERRIDE</label>
 <description>Leave this blank to use the auto detected URL, or enter a full http address to where a MJPEG stream can be watched if entered into any browser. 
@@ -1824,7 +1834,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_INPUT" type="text" required="false" groupName="FFmpeg Setup">
 <context>url</context>
 <label>FFMPEG_INPUT</label>
 <description>Leave this blank to use the auto detected RTSP address, or enter any URL that ffmpeg can use as an input. 
@@ -1832,21 +1842,21 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>		
 </parameter>
 
-<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_LOCATION</label>
 <description>The full path including the filename for where you have installed ffmpeg. For windows use this format, c:\ffmpeg\bin\ffmpeg.exe
 </description>
 <default>/usr/bin/ffmpeg</default>
 </parameter>
 
-<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_OUTPUT" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_OUTPUT</label>
 <description>The full path where ffmpeg has the ability to write files to ending with a slash. For windows use this format, c:\openhabconf\html\ipcamera\
 </description>
 <default>/cameratmpfs/camera1/</default>
 </parameter>
 
-<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_HLS_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_HLS_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used.
 </description>
@@ -1854,7 +1864,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
+<parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
@@ -1862,7 +1872,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MJPEG_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
 </description>
@@ -1870,7 +1880,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="FFmpeg Setup">
 <label>FFMPEG_MOTION_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
 </description>
@@ -1878,7 +1888,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
+<parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
 </description>
@@ -1886,7 +1896,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Image Settings">
+<parameter name="GIF_POSTROLL" type="integer" required="true" min="1" max="30" groupName="Settings">
 <label>GIF_POSTROLL</label>
 <description>How long in seconds to create a GIF from a stream. Alternatively if using GIF_PREROLL this is how many snapshots to use AFTER you trigger a GIF creation.
 </description>
@@ -1894,34 +1904,41 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
-<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Streaming Setup">
+<parameter name="SERVER_PORT" type="integer" required="true" min="-1" max="65535" groupName="Settings">
 <label>SERVER_PORT</label>
-<description>The port that will serve the video streams back to Openhab without authentication. It must be unique and unused for each camera that you setup. Setting the port to -1 which is the default, will turn all streaming off.
+<description>The port that will serve any files back to Openhab without authentication. It must be unique and unused for each camera. Setting the port to -1 will turn the feature off.
 </description>
 <default>-1</default>
 </parameter>
 
-<parameter name="IP_WHITELIST" type="text" required="false" groupName="Streaming Setup">
+<parameter name="IP_WHITELIST" type="text" required="false" groupName="Settings">
 <label>IP_WHITELIST</label>
 <description>Enter any IP's inside (brackets) that you wish to allow to access the video stream. 'DISABLE' will allow all devices on your network unrestricted access.
 </description>
 <default>DISABLE</default>
 </parameter>
 
-<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image Settings" multiple="false">
-<label>Update the JPG and Image when:</label>
-<description><![CDATA[
-The Image channel and JPG served on request can be set to update in a number of ways to help reduce network traffic.</p>
+<parameter name="IMAGE_UPDATE_EVENTS" type="integer" groupName="Image ch Settings" multiple="false">
+<label>Update the Image channel when:</label>
+<description>
+<![CDATA[
+The Image channel can be set to update in a number of ways. Recommend you set this to never updates as per the readme.</p>
 ]]>
 </description>
-<default>1</default>
+<default>0</default>
 <options>
-<option value="0">JPG and Image only update when updateImageNow is ON (0)</option>
-<option value="1">Always update JPG, Image ch follows updateImageNow (1)</option>
+<option value="0">Image channel never updates (0)</option>
+<option value="1">Image channel follows updateImageNow (1)</option>
+<option value="2">Start Motion Alarm (2)</option>
+<option value="3">Start Audio Alarm (3)</option>
+<option value="23">Start of Motion and Audio Alarms (23)</option>
+<option value="4">During Motion Alarm (4)</option>
+<option value="5">During Audio Alarm (5)</option>
+<option value="45">During Motion and Audio Alarms (45)</option>
 </options>
 </parameter>
 
-<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image Settings">	
+<parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
 <description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
 </description>	
@@ -1936,13 +1953,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 
 <parameter name="PORT" type="integer" required="true" min="1" max="65535" groupName="Settings">
-<label>The port of the camera that accepts HTTP.</label>
+<label>The PORT that accepts HTTP.</label>
 <description>This port will be used for http calls for fetching the snapshot and alarm states.
 </description>
 <default>80</default>
 </parameter>
 
-<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Image Settings">
+<parameter name="SNAPSHOT_URL_OVERRIDE" type="text" required="false" groupName="Settings">
 <context>url</context>
 <label>SNAPSHOT_URL_OVERRIDE</label>
 <description>Leave blank to use the autodetected URL for snapshots, or enter a http url to where a snapshot can be seen if entered into any browser.
@@ -1972,23 +1989,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 <parameter name="PTZ_CONTINUOUS" type="boolean" groupName="Settings">
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
-<description>Select if you want Relative (off) or Continuous (on) movements if this camera supports PTZ.
+<description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
 <default>false</default>
 </parameter>
 
-<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Streaming Setup">
+<parameter name="ONVIF_MEDIA_PROFILE" type="integer" required="true" min="0" max="5" groupName="Settings">
 <label>ONVIF_MEDIA_PROFILE</label>
 <description>Cameras can supply more than one stream at different resolutions and formats. 0 selects the main-stream and 1 or above are the sub-streams. Sometimes you need to turn on sub-streams in the cameras setup before they can be used.
 </description>
 <default>0</default>
 </parameter>
 
-<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Image Settings">
-<label>Time in milliseconds between checking camera states and fetching a JPG/Image.</label>
-<description>Camera states are not just alarms but can also be missing SD cards or full storage alerts. Default is "2000" which is 2 seconds.
+<parameter name="POLL_CAMERA_MS" type="integer" required="true" min="1000" max="15000" groupName="Settings">
+<label>Time in milliseconds between fetching a snapshot from the camera.</label>
+<description>Most features are made on demand and not polled, but some features require a regular snapshot to work. Default is "1000" which is 1 second.
 </description>
-<default>2000</default>
+<default>1000</default>
 </parameter>
 </config-description>
 </thing-type>

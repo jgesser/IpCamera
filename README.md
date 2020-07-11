@@ -187,21 +187,21 @@ The configuration parameters that can be used in textual configuration are in CA
 | `IPADDRESS`| Local address of your camera or NVR |
 | `PORT`| This port will be used for HTTP calls for fetching the snapshot and alarm states. |
 | `ONVIF_PORT`| The port your camera uses for ONVIF connections. This is needed for PTZ movement and the auto discovery of RTSP and snapshot URLs. |
-| `SERVER_PORT`| The port that will serve the video streams and images back to openHAB without authentication. You can choose any number, but it must be unique and unused for each camera that you setup. Setting the port to -1 (default), will turn all file serving off and some features will fail to work. Also learn about the Ip Whitelist feature if you enable this. |
+| `SERVER_PORT`| The port that will serve the video streams and snapshots back to openHAB without authentication. You can choose any number, but it must be unique and unused for each camera that you setup. Setting the port to -1 (default), will turn all file serving off and some features will fail to work. Also learn about the Ip Whitelist feature if you enable this. |
 | `USERNAME`| User name used to connect to your camera. Leave blank if your camera does not use login details. |
 | `PASSWORD`| Leave blank if your camera does not use login details. |
 | `ONVIF_MEDIA_PROFILE`| 0 is your cameras Mainstream and the numbers above 0 are the substreams if your camera has any. Any auto discovered URLs will use the stream this indicates. |
-| `POLL_CAMERA_MS`| Time in milliseconds between checking camera states and fetching a JPG/Image. |
-| `IMAGE_UPDATE_EVENTS`| The `Image` channel and JPG served on request can be set to update in a number of ways to help reduce network traffic. |
-| | `0` - Both ipcamera.jpg and the Image channel only update when updateImageNow is ON |
-| | `1` - Update ipcamera.jpg every poll, but the Image channel follows `updateImageNow` |
-| | `2` - Start of Motion Alarms will cause jpg and Image channel to update next poll. |
-| | `3` - Start Audio Alarm will cause jpg and Image channel to update next poll. |
-| | `23` - Start of Motion and Audio Alarms will cause jpg and Image channel to update next poll. |
-| | `4` - During Motion Alarm the jpg and Image channel will update every poll until Alarm stops. |
-| | `5` - During Audio Alarm the jpg and Image channel will update every poll until Alarm stops. |
-| | `45` - During Motion and Audio Alarms the jpg and Image channel will update every poll until both alarms stop. |
-| `UPDATE_IMAGE`| The startup default behavior of updating the image channel until the channel `updateImageNow` overrides. When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel. |
+| `POLL_CAMERA_MS`| Time in milliseconds between fetching a JPG. Note that most features will not poll and are done on demand to keep network traffic at a minimum. |
+| `IMAGE_UPDATE_EVENTS`| The `Image` channel can be set to update in a number of ways to help reduce network traffic. |
+| | `0` - Default, the Image channel never updates. |
+| | `1` - Update the Image channel when the `updateImageNow` channel is turned on.|
+| | `2` - Start of Motion Alarms will cause the Image channel to update next poll. |
+| | `3` - Start Audio Alarm will cause the Image channel to update next poll. |
+| | `23` - Start of Motion and Audio Alarms will the Image channel to update next poll. |
+| | `4` - During Motion Alarm the Image channel will update every poll until Alarm stops. |
+| | `5` - During Audio Alarm the Image channel will update every poll until Alarm stops. |
+| | `45` - During Motion and Audio Alarms the Image channel will update every poll until both alarms stop. |
+| `UPDATE_IMAGE`| The default state of the channel `updateImageNow` when Openhab starts. When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel. |
 | `NVR_CHANNEL`| Set this to `1` if it is a standalone camera, or to the input channel number of your NVR that the camera is connected to. |
 | `SNAPSHOT_URL_OVERRIDE`| Leave this empty to auto detect the snapshot URL if the camera has ONVIF. Enter a HTTP address if you wish to override with a different address, this can also make the camera connect quicker. Setting this to ffmpeg forces the camera to use ffmpeg to create the snapshots from the RTSP stream. |
 | `MOTION_URL_OVERRIDE`| Foscam only, for custom enable motion alarm use. More info found in Foscam setup below. |
@@ -218,6 +218,8 @@ The configuration parameters that can be used in textual configuration are in CA
 | `GIF_PREROLL`| Store this many snapshots from BEFORE you trigger a GIF creation. Default: `0` will not use snapshots and will instead use a realtime stream from the FFMPEG_INPUT url |
 | `GIF_POSTROLL`| How long in seconds to create a GIF from a stream. Alternatively if `GIF_PREROLL` is set to value greater than `0`, this is how many snapshots to use AFTER you trigger a GIF creation as snapshots occur at the poll rate. |
 | `IP_WHITELIST`| Enter any IPs inside brackets that you wish to allow to access the video stream. `DISABLE` the default value will turn this feature off.  Example: `IP_WHITELIST="(127.0.0.1)(192.168.0.99)"` |
+| `PTZ_CONTINUOUS`| If set to false (default) the camera will move using Relative commands, If set to true the camera will instead use continuous movements and will require an ``OFF`` command to stop the movement. |
+
 
 Create a file called `ipcamera.things` and save it to your things folder. 
 Inside this file enter this in plain text and modify it to your needs. Leaving a config out of this file will simply leave it at the default value which should work for most people.
@@ -302,6 +304,7 @@ The channels are kept consistent as much as possible from brand to brand to make
 **externalMotion**
 
 This channel is intended to allow any external sensor the ability to inform the binding that there is motion in the cameras field of view. 
+Note: It will not be passed onto your camera and will not trigger any recordings, it is purely for the bindings own set of features. 
 An example of how this is useful is if your camera either has no motion alarm features, or you have bugs tripping the built in sensors, you can use this channel with a ZWave PIR sensor to inform the camera of motion.
 This becomes more important when you start to use Camera groups that dynamically change the display order of the cameras based on if there is movement or not.
 It can also be handy to use this when doing testing as it allows motion to be simulated with the press of a button. 
