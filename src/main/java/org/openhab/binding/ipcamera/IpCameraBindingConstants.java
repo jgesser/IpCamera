@@ -57,6 +57,7 @@ public class IpCameraBindingConstants {
     public static final String CONFIG_IP_WHITELIST = "IP_WHITELIST";
     public static final String CONFIG_FFMPEG_LOCATION = "FFMPEG_LOCATION";
     public static final String CONFIG_FFMPEG_INPUT = "FFMPEG_INPUT";
+    public static final String CONFIG_FFMPEG_INPUT_TRANSPORT_UDP = "FFMPEG_INPUT_TRANSPORT_UDP";
     public static final String CONFIG_FFMPEG_OUTPUT = "FFMPEG_OUTPUT";
     public static final String CONFIG_FFMPEG_HLS_OUT_ARGUMENTS = "FFMPEG_HLS_OUT_ARGUMENTS";
     public static final String CONFIG_FFMPEG_GIF_OUT_ARGUMENTS = "FFMPEG_GIF_OUT_ARGUMENTS";

@@ -195,6 +195,7 @@ public class IpCameraHandler extends BaseThingHandler {
     public byte[] currentSnapshot = new byte[] { (byte) 0x00 };
     public ReentrantLock lockCurrentSnapshot = new ReentrantLock();
     public String rtspUri = "";
+    public String rtspTransport = "tcp";
     public String ipAddress = "empty";
     public String updateImageEvents = "";
     public boolean audioAlarmUpdateSnapshot = false;
@@ -1119,7 +1120,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (ffmpegHLS == null) {
                     if (rtspUri.contains(":554")) {
                         ffmpegHLS = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-hide_banner -loglevel warning -rtsp_transport tcp", rtspUri,
+                                "-hide_banner -loglevel warning -rtsp_transport " + rtspTransport, rtspUri,
                                 config.get(CONFIG_FFMPEG_HLS_OUT_ARGUMENTS).toString(),
                                 ffmpegOutputFolder + "ipcamera.m3u8", username, password);
                     } else {
@@ -1137,7 +1138,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (ffmpegDASH == null) {
                     if (rtspUri.contains(":554")) {
                         ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-rtsp_transport tcp -hide_banner -loglevel warning", rtspUri,
+                                "-rtsp_transport " + rtspTransport + " -hide_banner -loglevel warning", rtspUri,
                                 "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
                                 ffmpegOutputFolder + "ipcamera.mpd", username, password);
                     } else {
@@ -1160,7 +1161,7 @@ public class IpCameraHandler extends BaseThingHandler {
                                         + config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
                                 ffmpegOutputFolder + gifFilename + ".gif", username, password);
                     } else {
-                        inOptions = "-y -t " + postroll + " -rtsp_transport tcp -hide_banner -loglevel warning";
+                        inOptions = "-y -t " + postroll + " -rtsp_transport " + rtspTransport + " -hide_banner -loglevel warning";
                         if (!rtspUri.contains("rtsp")) {
                             inOptions = "-y -t " + postroll;
                         }
@@ -1177,7 +1178,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 break;
             case "RECORD":
-                inOptions = "-y -t " + mp4RecordTime + " -rtsp_transport tcp -hide_banner -loglevel warning";
+                inOptions = "-y -t " + mp4RecordTime + " -rtsp_transport " + rtspTransport + " -hide_banner -loglevel warning";
                 if (!rtspUri.contains("rtsp")) {
                     inOptions = "-y -t " + mp4RecordTime;
                 }
@@ -1199,7 +1200,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 String OutputOptions = "-f null -";
                 String filterOptions = "";
-                inOptions = "-rtsp_transport tcp";
+                inOptions = "-rtsp_transport " + rtspTransport;
                 if (!rtspUri.contains("rtsp")) {
                     inOptions = "";
                 }
@@ -1221,7 +1222,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 break;
             case "MJPEG":
                 if (ffmpegMjpeg == null) {
-                    inOptions = "-rtsp_transport tcp -hide_banner -loglevel warning";
+                    inOptions = "-rtsp_transport " + rtspTransport + " -hide_banner -loglevel warning";
                     if (!rtspUri.contains("rtsp")) {
                         inOptions = "-hide_banner -loglevel warning";
                     }
@@ -1236,8 +1237,8 @@ public class IpCameraHandler extends BaseThingHandler {
             case "SNAPSHOT":
                 // if mjpeg stream you can use ffmpeg -i input.h264 -codec:v copy -bsf:v mjpeg2jpeg output%03d.jpg
                 if (ffmpegSnapshot == null) {
-                    inOptions = "-rtsp_transport tcp -threads 1 -skip_frame nokey -hide_banner -loglevel warning";// iFrames
-                                                                                                                  // only
+                    inOptions = "-rtsp_transport " + rtspTransport + " -threads 1 -skip_frame nokey -hide_banner -loglevel warning";// iFrames
+                                                                                                                                    // only
                     if (!rtspUri.contains("rtsp")) {
                         inOptions = "-threads 1 -skip_frame nokey -hide_banner -loglevel warning";
                     }
@@ -1873,6 +1874,10 @@ public class IpCameraHandler extends BaseThingHandler {
         }
 
         rtspUri = (config.get(CONFIG_FFMPEG_INPUT) == null) ? "" : config.get(CONFIG_FFMPEG_INPUT).toString();
+        if (config.get(CONFIG_FFMPEG_INPUT_TRANSPORT_UDP) != null
+                && (boolean) config.get(CONFIG_FFMPEG_INPUT_TRANSPORT_UDP)) {
+            rtspTransport = "udp";
+        }
 
         ffmpegOutputFolder = (config.get(CONFIG_FFMPEG_OUTPUT) == null) ? ""
                 : config.get(CONFIG_FFMPEG_OUTPUT).toString();
