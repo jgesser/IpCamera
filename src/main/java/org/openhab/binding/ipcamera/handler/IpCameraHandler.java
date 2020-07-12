@@ -140,7 +140,6 @@ public class IpCameraHandler extends BaseThingHandler {
     final ChannelGroup snapshotMjpegChannelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     final ChannelGroup autoSnapshotMjpegChannelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     public @Nullable Ffmpeg ffmpegHLS = null;
-    public @Nullable Ffmpeg ffmpegDASH = null;
     public @Nullable Ffmpeg ffmpegRecord = null;
     public @Nullable Ffmpeg ffmpegGIF = null;
     public @Nullable Ffmpeg ffmpegRtspHelper = null;
@@ -579,8 +578,8 @@ public class IpCameraHandler extends BaseThingHandler {
                         } finally {
                             lock.unlock();
                         }
-                        logger.debug("Have re-opened the closed channel:{} \t{}:{}", indexInLists, httpMethod,
-                                httpRequestURL);
+                        // logger.debug("Have re-opened the closed channel:{} \t{}:{}", indexInLists, httpMethod,
+                        // httpRequestURL);
                     } else {
                         lock.lock();
                         try {
@@ -591,8 +590,8 @@ public class IpCameraHandler extends BaseThingHandler {
                         } finally {
                             lock.unlock();
                         }
-                        logger.debug("Have opened a brand NEW channel:{} \t{}:{}", listOfRequests.size() - 1,
-                                httpMethod, httpRequestURL);
+                        // logger.debug("Have opened a brand NEW channel:{} \t{}:{}", listOfRequests.size() - 1,
+                        // httpMethod, httpRequestURL);
                     }
                     ch.writeAndFlush(request);
                     if (!isOnline) {
@@ -1129,24 +1128,6 @@ public class IpCameraHandler extends BaseThingHandler {
                     ffmpegHLS.startConverting();
                 }
                 break;
-            case "DASH":
-                if (ffmpegDASH == null) {
-                    if (rtspUri.contains(":554")) {
-                        ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-rtsp_transport tcp -hide_banner -loglevel warning", rtspUri,
-                                "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
-                                ffmpegOutputFolder + "ipcamera.mpd", username, password);
-                    } else {
-                        ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-hide_banner -loglevel warning", rtspUri,
-                                "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
-                                ffmpegOutputFolder + "ipcamera.mpd", username, password);
-                    }
-                }
-                if (ffmpegDASH != null) {
-                    ffmpegDASH.startConverting();
-                }
-                break;
             case "GIF":
                 if (ffmpegGIF == null) {
                     if (preroll > 0) {
@@ -1640,19 +1621,17 @@ public class IpCameraHandler extends BaseThingHandler {
     void snapshotIsFfmpeg() {
         bringCameraOnline();
         snapshotUri = "";// ffmpeg is a valid option. Simplify further checks.
-        // if (updateImageEvents.equals("1")) {
-        updateImageChannel = false;
         logger.info(
-                "Binding has no snapshot url. Will now use your CPU and FFmpeg (must be installed) to create snapshots from RTSP.");
-        ffmpegSnapshotGeneration = true;
+                "Binding has no snapshot url. Will now use your CPU and FFmpeg which must be installed to create snapshots from RTSP.");
         if (!rtspUri.equals("")) {
+            updateImageChannel = false;
+            ffmpegSnapshotGeneration = true;
             setupFfmpegFormat("SNAPSHOT");
             updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
         } else {
             cameraConfigError(
                     "Binding can not find a RTSP url for this camera, please OVERRIDE the url as per the readme.");
         }
-        // }
     }
 
     Runnable pollingCameraConnection = new Runnable() {
@@ -1724,22 +1703,7 @@ public class IpCameraHandler extends BaseThingHandler {
         @Override
         public void run() {
             // Snapshot should be first to keep consistent time between shots
-            // if (!snapshotUri.isEmpty()) {
             sendHttpGET(snapshotUri);
-            // }
-
-            /*
-             * else if (audioAlarmUpdateSnapshot || shortAudioAlarm) {
-             * sendHttpGET(snapshotUri);
-             * // updateCounter = 5;
-             * shortAudioAlarm = false;
-             * } else if (motionAlarmUpdateSnapshot || shortMotionAlarm) {
-             * sendHttpGET(snapshotUri);
-             * // updateCounter = 5;
-             * shortMotionAlarm = false;
-             * }
-             * }
-             */
             if (snapCount > 0) {
                 if (--snapCount == 0) {
                     setupFfmpegFormat("GIF");
@@ -1796,7 +1760,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 case "HTTPONLY":
                     break;
                 case "ONVIF":
-                    onvifCamera.pullMessages();
+                    if (!onvifCamera.isConnected()) {
+                        onvifCamera.connect(true);
+                    }
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
@@ -2018,10 +1984,6 @@ public class IpCameraHandler extends BaseThingHandler {
         if (ffmpegSnapshot != null) {
             ffmpegSnapshot.stopConverting();
             ffmpegSnapshot = null;
-        }
-        if (ffmpegDASH != null) {
-            ffmpegDASH.stopConverting();
-            ffmpegDASH = null;
         }
 
         lock.lock();

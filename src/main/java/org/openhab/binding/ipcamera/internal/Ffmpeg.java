@@ -98,7 +98,7 @@ public class Ffmpeg {
                             logger.debug("{}", line);
                             if (line.contains("lavfi.")) {
                                 if (countOfMotions == 4) {
-                                    ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
+                                    ipCameraHandler.motionDetected(CHANNEL_FFMPEG_MOTION_CONTROL);
                                 } else {
                                     countOfMotions++;
                                 }
@@ -107,7 +107,7 @@ public class Ffmpeg {
                                     countOfMotions--;
                                     countOfMotions--;
                                     if (countOfMotions <= 0) {
-                                        ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                                        ipCameraHandler.noMotionDetected(CHANNEL_FFMPEG_MOTION_CONTROL);
                                     }
                                 }
                             } else if (line.contains("silence_start")) {

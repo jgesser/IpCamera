@@ -94,28 +94,29 @@
 
 </config-description>
 </thing-type>
-	<thing-type id="HTTPONLY">
+
+<thing-type id="HTTPONLY">
 		<label>"HTTPONLY" Generic IP camera with only HTTP support.</label>
 		<description>Use when your camera is not ONVIF compatible.</description>
-		<channels>		
+		<channels>
+		<channel id="startStream" typeId="startStream"/>
+		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="image" typeId="image"/>        				
 		<channel id="updateGif" typeId="updateGif"/>
+		<channel id="gifFilename" typeId="gifFilename"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
-		<channel id="gifFilename" typeId="gifFilename"/>		
+        <channel id="lastMotionType" typeId="lastMotionType"/>				
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
-		<channel id="motionAlarm" typeId="motionAlarm"/>
-		<channel id="lastMotionType" typeId="lastMotionType"/>		
+		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
+		<channel id="externalMotion" typeId="externalMotion"/>				
         <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-        <channel id="audioAlarm" typeId="audioAlarm"/>
-        <channel id="startStream" typeId="startStream"/>
-        <channel id="externalMotion" typeId="externalMotion"/> 
+        <channel id="audioAlarm" typeId="audioAlarm"/>                 
 		<channel id="streamUrl" typeId="streamUrl"/>
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
-		<channel id="hlsUrl" typeId="hlsUrl"/>
-		<channel id="image" typeId="image"/>
-        <channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="hlsUrl" typeId="hlsUrl"/>		
 		</channels>
 <config-description>
 
@@ -159,7 +160,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">
 <label>Default UPDATE_IMAGE setting</label>
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.
 </description>
 <default>false</default>
 </parameter>
@@ -313,35 +314,37 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 </config-description>
 </thing-type>
-	<thing-type id="ONVIF">
+
+<thing-type id="ONVIF">
 		<label>"ONVIF" Generic IP camera with ONVIF support.</label>
 		<description>Use when the binding does not list your brand of ONVIF compatible Camera</description>
-		<channels>		
+		<channels>
+		<channel id="startStream" typeId="startStream"/>
+		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="image" typeId="image"/>        		
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="gifFilename" typeId="gifFilename"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
-        <channel id="mp4Filename" typeId="mp4Filename"/>		
+        <channel id="mp4Filename" typeId="mp4Filename"/>
+        <channel id="lastMotionType" typeId="lastMotionType"/>		
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
 		<channel id="externalMotion" typeId="externalMotion"/>
         <channel id="motionAlarm" typeId="motionAlarm"/>
         <channel id="pirAlarm" typeId="pirAlarm"/>
-        <channel id="lastMotionType" typeId="lastMotionType"/>   
         <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
         <channel id="audioAlarm" typeId="audioAlarm"/>
 		<channel id="pan" typeId="pan"/>
 		<channel id="tilt" typeId="tilt"/>
 		<channel id="zoom" typeId="zoom"/>
-		<channel id="gotoPreset" typeId="gotoPreset"/>
-		<channel id="startStream" typeId="startStream"/>  
+		<channel id="gotoPreset" typeId="gotoPreset"/>		  
 		<channel id="streamUrl" typeId="streamUrl"/>
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
-		<channel id="hlsUrl" typeId="hlsUrl"/>
-		<channel id="image" typeId="image"/>
-        <channel id="updateImageNow" typeId="updateImageNow"/>	
+		<channel id="hlsUrl" typeId="hlsUrl"/>			
 		</channels>
-		<config-description>
+<config-description>
 
 <parameter-group name="Settings">
 <label>Main Settings</label>
@@ -383,7 +386,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">
 <label>Default UPDATE_IMAGE setting</label>
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>
 <default>false</default>
 </parameter>
@@ -545,21 +548,25 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 </config-description>
 </thing-type>
-	<thing-type id="AMCREST">
+
+<thing-type id="AMCREST">
 		<label>"AMCREST" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Amcrest Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
-		<channel id="image" typeId="image"/>
-			<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="startStream" typeId="startStream"/>
+		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="image" typeId="image"/>			
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-            <channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>					
+            <channel id="lastMotionType" typeId="lastMotionType"/>
+            <channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+            <channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>					
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
-			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
+			<channel id="externalMotion" typeId="externalMotion"/>			
 			<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
 			<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
 			<channel id="audioAlarm" typeId="audioAlarm"/>	
@@ -568,13 +575,11 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="pan" typeId="pan"/>
 			<channel id="tilt" typeId="tilt"/>
 			<channel id="zoom" typeId="zoom"/>
-			<channel id="gotoPreset" typeId="gotoPreset"/>
-			<channel id="startStream" typeId="startStream"/>  
+			<channel id="gotoPreset" typeId="gotoPreset"/>			  
 			<channel id="streamUrl" typeId="streamUrl"/>
 			<channel id="rtspUrl" typeId="rtspUrl"/>
 			<channel id="imageUrl" typeId="imageUrl"/>
-			<channel id="hlsUrl" typeId="hlsUrl"/>
-			<channel id="lastMotionType" typeId="lastMotionType"/>				
+			<channel id="hlsUrl" typeId="hlsUrl"/>							
 		</channels>		
 		<config-description>
 		
@@ -710,7 +715,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -792,18 +797,20 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<label>"DAHUA" IP camera with ONVIF and API support.</label>
 		<description>Use for all current DAHUA Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
+		<channel id="startStream" typeId="startStream"/>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
+			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
-            <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>
-			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>			
-			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
-			<channel id="externalMotion" typeId="externalMotion"/>
-			<channel id="motionAlarm" typeId="motionAlarm"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>			
 			<channel id="lastMotionType" typeId="lastMotionType"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>			
+			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
+			<channel id="motionAlarm" typeId="motionAlarm"/>
+			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
 			<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
 			<channel id="audioAlarm" typeId="audioAlarm"/>	 
@@ -826,7 +833,6 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="tilt" typeId="tilt"/>
 			<channel id="zoom" typeId="zoom"/>
 			<channel id="gotoPreset" typeId="gotoPreset"/>
-			<channel id="startStream" typeId="startStream"/>  
 			<channel id="streamUrl" typeId="streamUrl"/>
 			<channel id="rtspUrl" typeId="rtspUrl"/>
 			<channel id="imageUrl" typeId="imageUrl"/>
@@ -966,7 +972,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -1044,26 +1050,28 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 </config-description>
 </thing-type>
-	<thing-type id="DOORBIRD">
+
+<thing-type id="DOORBIRD">
 		<label>"DOORBIRD" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Doorbird Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
+		<channel id="startStream" typeId="startStream"/>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
+			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>
-			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
-			<channel id="externalMotion" typeId="externalMotion"/>			
-			<channel id="motionAlarm" typeId="motionAlarm"/>
 			<channel id="lastMotionType" typeId="lastMotionType"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
+			<channel id="externalMotion" typeId="externalMotion"/>			
+			<channel id="motionAlarm" typeId="motionAlarm"/>			
 			<channel id="activateAlarmOutput" typeId="activateAlarmOutput"/>
 			<channel id="activateAlarmOutput2" typeId="activateAlarmOutput2"/>
 			<channel id="doorBell" typeId="doorBell"/>
-			<channel id="externalLight" typeId="externalLight"/>
-			<channel id="startStream" typeId="startStream"/>  
+			<channel id="externalLight" typeId="externalLight"/>			  
 			<channel id="streamUrl" typeId="streamUrl"/>
 			<channel id="rtspUrl" typeId="rtspUrl"/>
 			<channel id="imageUrl" typeId="imageUrl"/>
@@ -1203,7 +1211,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -1277,32 +1285,33 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<label>"FOSCAM" IP camera with ONVIF and API support.</label>
 		<description>Use for all current HD FOSCAM Cameras as they support an API as well as ONVIF.</description>
 		<channels>
+		<channel id="startStream" typeId="startStream"/>
 		<channel id="updateImageNow" typeId="updateImageNow"/>
+		<channel id="image" typeId="image"/>
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="gifFilename" typeId="gifFilename"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
-		<channel id="image" typeId="image"/>
+        <channel id="lastMotionType" typeId="lastMotionType"/>		
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
-			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
-			<channel id="externalMotion" typeId="externalMotion"/>
-			<channel id="motionAlarm" typeId="motionAlarm"/>
-			<channel id="lastMotionType" typeId="lastMotionType"/>
-			<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
-			<channel id="audioAlarm" typeId="audioAlarm"/>
-			<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-			<channel id="autoLED" typeId="autoLED"/>
-			<channel id="enableLED" typeId="enableLED"/>
-			<channel id="pan" typeId="pan"/>
-			<channel id="tilt" typeId="tilt"/>
-			<channel id="zoom" typeId="zoom"/>
-			<channel id="gotoPreset" typeId="gotoPreset"/>
-			<channel id="startStream" typeId="startStream"/>  
-			<channel id="streamUrl" typeId="streamUrl"/>
-			<channel id="rtspUrl" typeId="rtspUrl"/>
-			<channel id="imageUrl" typeId="imageUrl"/>
-			<channel id="hlsUrl" typeId="hlsUrl"/>
+		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
+		<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
+		<channel id="motionAlarm" typeId="motionAlarm"/>
+		<channel id="externalMotion" typeId="externalMotion"/>
+		<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
+		<channel id="audioAlarm" typeId="audioAlarm"/>
+		<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
+		<channel id="autoLED" typeId="autoLED"/>
+		<channel id="enableLED" typeId="enableLED"/>
+		<channel id="pan" typeId="pan"/>
+		<channel id="tilt" typeId="tilt"/>
+		<channel id="zoom" typeId="zoom"/>
+		<channel id="gotoPreset" typeId="gotoPreset"/>
+		<channel id="streamUrl" typeId="streamUrl"/>
+		<channel id="rtspUrl" typeId="rtspUrl"/>
+		<channel id="imageUrl" typeId="imageUrl"/>
+		<channel id="hlsUrl" typeId="hlsUrl"/>
 		</channels>		
 		<config-description>
 
@@ -1438,7 +1447,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -1522,21 +1531,25 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 </config-description>
 </thing-type>
-	<thing-type id="HIKVISION">
+
+<thing-type id="HIKVISION">
 		<label>"HIKVISION" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Hikvision Cameras as they support an API as well as ONVIF.</description>
 		<channels>
+		<channel id="startStream" typeId="startStream"/>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
+			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>
-			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>			
+			<channel id="lastMotionType" typeId="lastMotionType"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>			
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
-			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
+			<channel id="externalMotion" typeId="externalMotion"/>			
 			<channel id="pirAlarm" typeId="pirAlarm"/>			 
 			<channel id="enableLineCrossingAlarm" typeId="enableLineCrossingAlarm"/>
 			<channel id="lineCrossingAlarm" typeId="lineCrossingAlarm"/>
@@ -1552,13 +1565,11 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="pan" typeId="pan"/>
 			<channel id="tilt" typeId="tilt"/>
 			<channel id="zoom" typeId="zoom"/>
-			<channel id="gotoPreset" typeId="gotoPreset"/>
-			<channel id="startStream" typeId="startStream"/>  
+			<channel id="gotoPreset" typeId="gotoPreset"/>			  
 			<channel id="streamUrl" typeId="streamUrl"/>
 			<channel id="rtspUrl" typeId="rtspUrl"/>		
 			<channel id="imageUrl" typeId="imageUrl"/>
-			<channel id="hlsUrl" typeId="hlsUrl"/>
-			<channel id="lastMotionType" typeId="lastMotionType"/>
+			<channel id="hlsUrl" typeId="hlsUrl"/>			
 		</channels>
 		<config-description>
 
@@ -1694,7 +1705,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -1777,21 +1788,24 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<label>"INSTAR" HD IP camera with ONVIF and API support.</label>
 		<description>Use for all current INSTAR HD Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
+		    <channel id="startStream" typeId="startStream"/>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
+			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>
+            <channel id="lastMotionType" typeId="lastMotionType"/>			
 			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
+			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
+			<channel id="motionAlarm" typeId="motionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="enablePirAlarm" typeId="enablePirAlarm"/>
 			<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
 			<channel id="enableExternalAlarmInput" typeId="enableExternalAlarmInput"/>
-			<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-			<channel id="motionAlarm" typeId="motionAlarm"/>
+			<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>			
 			<channel id="pirAlarm" typeId="pirAlarm"/>
 			<channel id="audioAlarm" typeId="audioAlarm"/>
 			<channel id="textOverlay" typeId="textOverlay"/>
@@ -1800,7 +1814,6 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="tilt" typeId="tilt"/>
 			<channel id="zoom" typeId="zoom"/>
 			<channel id="gotoPreset" typeId="gotoPreset"/>
-			<channel id="startStream" typeId="startStream"/>  
 			<channel id="streamUrl" typeId="streamUrl"/>
 			<channel id="rtspUrl" typeId="rtspUrl"/>
 			<channel id="imageUrl" typeId="imageUrl"/>
@@ -1940,7 +1953,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <parameter name="UPDATE_IMAGE" type="boolean" required="true" groupName="Image ch Settings">	
 <label>Default UPDATE_IMAGE setting</label>	
-<description>When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel.	
+<description>Turn this ON to update the Image channel, otherwise the image channel will NOT update unless you turn ON the updateImageNow channel.	
 </description>	
 <default>false</default>
 </parameter>
@@ -2155,6 +2168,14 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<category>Motion</category>
 		<state readOnly="true" />
 		</channel-type>
+		
+		<channel-type id="ffmpegMotionAlarm">
+        <item-type>Switch</item-type>
+        <label>FFmpeg Motion Alarm</label>
+        <description>FFmpeg has detected motion.</description>
+        <category>Motion</category>
+        <state readOnly="true" />
+        </channel-type>
 		
 		<channel-type id="lineCrossingAlarm">
 		<item-type>Switch</item-type>

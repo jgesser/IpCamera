@@ -118,8 +118,6 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             sendFile(ctx, httpRequest.uri(), "application/x-mpegurl");
                             return;
                         case "/ipcamera.mpd":
-                            // ipCameraHandler.setupFfmpegFormat("DASH");
-                            // ipCameraHandler.ffmpegDASH.setKeepAlive(60);// setup must come first
                             sendFile(ctx, httpRequest.uri(), "application/dash+xml");
                             return;
                         case "/ipcamera.gif":
@@ -209,6 +207,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         ipCameraHandler.lockCurrentSnapshot.unlock();
                         ipCameraHandler.processSnapshot();
                     } else if (onvifEvent) {
+                        logger.debug("StreamServer recieved a new event");
                         ipCameraHandler.onvifCamera.eventRecieved(new String(incomingJpeg, StandardCharsets.UTF_8));
                     } else {
                         if (recievedBytes > 1000) {
