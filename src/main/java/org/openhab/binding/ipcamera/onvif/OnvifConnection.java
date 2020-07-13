@@ -539,6 +539,13 @@ public class OnvifConnection {
                     ipCameraHandler.noMotionDetected(CHANNEL_FIELD_DETECTION_ALARM);
                 }
                 break;
+            case "RuleEngine/LineDetector/Crossed":
+                if (dataName.equals("ObjectId")) {
+                    ipCameraHandler.motionDetected(CHANNEL_LINE_CROSSING_ALARM);
+                } else {
+                    ipCameraHandler.noMotionDetected(CHANNEL_LINE_CROSSING_ALARM);
+                }
+                break;
             case "RuleEngine/TamperDetector/Tamper":
                 if (dataValue.equals("true")) {
                     ipCameraHandler.changeAlarmState(CHANNEL_TAMPER_ALARM, "ON");
