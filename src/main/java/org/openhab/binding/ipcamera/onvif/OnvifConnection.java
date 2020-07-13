@@ -209,11 +209,11 @@ public class OnvifConnection {
             case "RelativeMoveIn":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><Zoom x=\"0.0200000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><Zoom x=\"0.0240506344\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveOut":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><Zoom x=\"-0.0200000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><Zoom x=\"-0.0240506344\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "Renew":
                 return "<Renew xmlns=\"http://docs.oasis-open.org/wsn/b-2\"><TerminationTime>PT1M</TerminationTime></Renew>";
             case "GetConfigurations":
