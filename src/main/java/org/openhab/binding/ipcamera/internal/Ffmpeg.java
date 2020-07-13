@@ -111,9 +111,7 @@ public class Ffmpeg {
                                     }
                                 }
                             } else if (line.contains("silence_start")) {
-                                ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                                ipCameraHandler.firstAudioAlarm = false;
-                                ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                                ipCameraHandler.noAudioDetected();
                             } else if (line.contains("silence_end")) {
                                 ipCameraHandler.audioDetected();
                             }

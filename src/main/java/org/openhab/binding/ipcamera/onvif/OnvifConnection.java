@@ -13,7 +13,7 @@
 
 package org.openhab.binding.ipcamera.onvif;
 
-import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CHANNEL_MOTION_ALARM;
+import static org.openhab.binding.ipcamera.IpCameraBindingConstants.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -272,9 +271,12 @@ public class OnvifConnection {
                 sendOnvifRequest(requestBuilder("GetServiceCapabilities", eventXAddr));
             }
         } else if (message.contains("GetServiceCapabilitiesResponse")) {
+            if (message.contains("WSSubscriptionPolicySupport=\"true\"")) {
+                sendOnvifRequest(requestBuilder("Subscribe", eventXAddr));
+            }
+            // sendOnvifRequest(requestBuilder("Subscribe", eventXAddr));
         } else if (message.contains("GetEventPropertiesResponse")) {
             sendOnvifRequest(requestBuilder("CreatePullPointSubscription", eventXAddr));
-            sendOnvifRequest(requestBuilder("Subscribe", eventXAddr));
         } else if (message.contains("SubscribeResponse")) {
             logger.info("Onvif Subscribe appears to be working for Alarms/Events.");
         } else if (message.contains("CreatePullPointSubscriptionResponse")) {
@@ -320,10 +322,9 @@ public class OnvifConnection {
         String extraEnvelope = " xmlns:a=\"http://www.w3.org/2005/08/addressing\"";
         String headerTo = "";
         if (requestType.equals("CreatePullPointSubscription") || requestType.equals("PullMessages")
-                || requestType.equals("Renew")) {
+                || requestType.equals("Renew") || requestType.equals("Unsubscribe")) {
             headerTo = "<a:To s:mustUnderstand=\"1\">http://" + ipAddress + xAddr + "</a:To>";
         }
-
         if (!password.equals("")) {
             String nonce = createNonce();
             String dateTime = getUTCdateTime();
@@ -381,7 +382,7 @@ public class OnvifConnection {
     void parseXAddr(String message) {
         deviceXAddr = removeIPfromUrl(fetchXML(message, "<tt:Device>", "<tt:XAddr>"));
         logger.debug("deviceXAddr:{}", deviceXAddr);
-        eventXAddr = removeIPfromUrl(fetchXML(message, "<tt:Events>", "<tt:XAddr>"));
+        subscriptionXAddr = eventXAddr = removeIPfromUrl(fetchXML(message, "<tt:Events>", "<tt:XAddr>"));
         logger.debug("eventsXAddr:{}", eventXAddr);
         mediaXAddr = removeIPfromUrl(fetchXML(message, "<tt:Media>", "<tt:XAddr>"));
         logger.debug("mediaXAddr:{}", mediaXAddr);
@@ -442,7 +443,7 @@ public class OnvifConnection {
             bootstrap.group(mainEventLoopGroup);
             bootstrap.channel(NioSocketChannel.class);
             bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 4000);
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
             bootstrap.option(ChannelOption.SO_SNDBUF, 1024 * 8);
             bootstrap.option(ChannelOption.SO_RCVBUF, 1024 * 1024);
             bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -473,6 +474,7 @@ public class OnvifConnection {
                     }
                 }
             }
+
         });
     }
 
@@ -515,14 +517,8 @@ public class OnvifConnection {
         String dataValue = fetchXML(eventMessage, "tt:Data", "Value=\"");
         logger.debug("Onvif Event Topic:{}, Data:{}, Value:{}", topic, dataName, dataValue);
         switch (topic) {
-            case "VideoSource/MotionAlarm":
-                if (dataValue.equals("true")) {
-                    ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                } else if (dataValue.equals("false")) {
-                    ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
-                }
-                break;
             case "RuleEngine/CellMotionDetector/Motion":
+            case "VideoSource/MotionAlarm":
                 if (dataValue.equals("true")) {
                     ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
                 } else if (dataValue.equals("false")) {
@@ -534,6 +530,63 @@ public class OnvifConnection {
                     ipCameraHandler.audioDetected();
                 } else if (dataValue.equals("false")) {
                     ipCameraHandler.noAudioDetected();
+                }
+                break;
+            case "RuleEngine/FieldDetector/ObjectsInside":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.motionDetected(CHANNEL_FIELD_DETECTION_ALARM);
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.noMotionDetected(CHANNEL_FIELD_DETECTION_ALARM);
+                }
+                break;
+            case "RuleEngine/TamperDetector/Tamper":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TAMPER_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TAMPER_ALARM, "OFF");
+                }
+                break;
+            case "Device/HardwareFailure/StorageFailure":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_STORAGE_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_STORAGE_ALARM, "OFF");
+                }
+                break;
+            case "VideoSource/ImageTooDark/AnalyticsService":
+            case "VideoSource/ImageTooDark/ImagingService":
+            case "VideoSource/ImageTooDark/RecordingService":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_DARK_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_DARK_ALARM, "OFF");
+                }
+                break;
+            case "VideoSource/GlobalSceneChange/AnalyticsService":
+            case "VideoSource/GlobalSceneChange/ImagingService":
+            case "VideoSource/GlobalSceneChange/RecordingService":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_SCENE_CHANGE_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_SCENE_CHANGE_ALARM, "OFF");
+                }
+                break;
+            case "VideoSource/ImageTooBright/AnalyticsService":
+            case "VideoSource/ImageTooBright/ImagingService":
+            case "VideoSource/ImageTooBright/RecordingService":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_BRIGHT_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_BRIGHT_ALARM, "OFF");
+                }
+                break;
+            case "VideoSource/ImageTooBlurry/AnalyticsService":
+            case "VideoSource/ImageTooBlurry/ImagingService":
+            case "VideoSource/ImageTooBlurry/RecordingService":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_BLURRY_ALARM, "ON");
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.changeAlarmState(CHANNEL_TOO_BLURRY_ALARM, "OFF");
                 }
                 break;
             default:
@@ -704,11 +757,13 @@ public class OnvifConnection {
     }
 
     public void connect(boolean useEvents) {
-        if (mainEventLoopGroup.isShutdown()) {
-            mainEventLoopGroup = new NioEventLoopGroup();
+        if (!isConnected) {
+            // if (mainEventLoopGroup.isShutdown()) {
+            // mainEventLoopGroup = new NioEventLoopGroup();
+            // }
+            sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
+            this.useEvents = useEvents;
         }
-        sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
-        this.useEvents = useEvents;
     }
 
     public boolean isConnected() {
@@ -716,21 +771,24 @@ public class OnvifConnection {
     }
 
     public void disconnect() {
-        if (useEvents) {
-            sendEventRequest("Unsubscribe");
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
+        if (isConnected) {
+            isConnected = false;
+            if (useEvents) {
+                // sendEventRequest("Unsubscribe");
+                sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                }
             }
-        }
-        isConnected = false;
-        presetTokens.clear();
-        mediaProfileTokens.clear();
-        if (!mainEventLoopGroup.isShutdown()) {
-            try {
-                mainEventLoopGroup.awaitTermination(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-            }
+            presetTokens.clear();
+            mediaProfileTokens.clear();
+            // if (!mainEventLoopGroup.isShutdown()) {
+            // try {
+            // mainEventLoopGroup.awaitTermination(3, TimeUnit.SECONDS);
+            // } catch (InterruptedException e) {
+            // }
+            // }
         }
     }
 }

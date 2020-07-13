@@ -111,6 +111,12 @@ public class IpCameraBindingConstants {
     public static final String CHANNEL_ENABLE_FIELD_DETECTION_ALARM = "enableFieldDetectionAlarm";
     public static final String CHANNEL_FIELD_DETECTION_ALARM = "fieldDetectionAlarm";
     public static final String CHANNEL_PARKING_ALARM = "parkingAlarm";
+    public static final String CHANNEL_TAMPER_ALARM = "tamperAlarm";
+    public static final String CHANNEL_TOO_DARK_ALARM = "tooDarkAlarm";
+    public static final String CHANNEL_STORAGE_ALARM = "storageAlarm";
+    public static final String CHANNEL_SCENE_CHANGE_ALARM = "sceneChangeAlarm";
+    public static final String CHANNEL_TOO_BRIGHT_ALARM = "tooBrightAlarm";
+    public static final String CHANNEL_TOO_BLURRY_ALARM = "tooBlurryAlarm";
     public static final String CHANNEL_TEXT_OVERLAY = "textOverlay";
     public static final String CHANNEL_API_ACCESS = "apiAccess";
     public static final String CHANNEL_EXTERNAL_LIGHT = "externalLight";

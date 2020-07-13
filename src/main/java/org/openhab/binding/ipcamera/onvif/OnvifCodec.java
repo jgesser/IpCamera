@@ -63,6 +63,10 @@ public class OnvifCodec extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) {
+        if (ctx == null) {
+            return;
+        }
         logger.debug("Exception on ONVIF connection: {}", cause);
+        ctx.close();
     }
 }
