@@ -43,7 +43,7 @@ import io.netty.util.ReferenceCountUtil;
 @NonNullByDefault
 public class InstarHandler extends ChannelDuplexHandler {
     IpCameraHandler ipCameraHandler;
-    private String requestUrl = "Empty";
+    String requestUrl = "Empty";
 
     public InstarHandler(ThingHandler thingHandler) {
         ipCameraHandler = (IpCameraHandler) thingHandler;
@@ -61,14 +61,12 @@ public class InstarHandler extends ChannelDuplexHandler {
         }
         String content = "";
         String value1 = "";
-
         try {
             content = msg.toString();
             if (content.isEmpty()) {
                 return;
             }
-            ipCameraHandler.logger.trace("HTTP Result back from camera is \t:{}:", content);
-
+            // ipCameraHandler.logger.trace("HTTP Result back from camera is \t:{}:", content);
             switch (requestUrl) {
                 case "/param.cgi?cmd=getinfrared":
                     if (content.contains("var infraredstat=\"auto")) {
@@ -94,22 +92,18 @@ public class InstarHandler extends ChannelDuplexHandler {
                     } else {
                         ipCameraHandler.setChannelState(CHANNEL_ENABLE_MOTION_ALARM, OnOffType.valueOf("OFF"));
                     }
-                    // Reset the Alarm, need to find better place to put this.
-                    ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
                     break;
                 case "/cgi-bin/hi3510/param.cgi?cmd=getaudioalarmattr":// Audio Alarm
                     if (content.contains("var aa_enable=\"1\"")) {
                         ipCameraHandler.setChannelState(CHANNEL_ENABLE_AUDIO_ALARM, OnOffType.valueOf("ON"));
                         value1 = ipCameraHandler.searchString(content, "var aa_value=\"");
                         if (!value1.isEmpty()) {
-                            ipCameraHandler.logger.debug("Threshold is changing to {}", value1);
+                            // ipCameraHandler.logger.debug("Threshold is changing to {}", value1);
                             ipCameraHandler.setChannelState(CHANNEL_THRESHOLD_AUDIO_ALARM, PercentType.valueOf(value1));
                         }
                     } else {
                         ipCameraHandler.setChannelState(CHANNEL_ENABLE_AUDIO_ALARM, OnOffType.valueOf("OFF"));
                     }
-                    // Reset the Alarm, need to find better place to put this.
-                    ipCameraHandler.noAudioDetected();
                     break;
                 case "param.cgi?cmd=getpirattr":// PIR Alarm
                     if (content.contains("var pir_enable=\"1\"")) {
@@ -151,7 +145,7 @@ public class InstarHandler extends ChannelDuplexHandler {
                     if (ipCameraHandler.serverPort > 0) {
                         ipCameraHandler.logger.info("Setting up the Alarm Server settings in the camera now");
                         ipCameraHandler.sendHttpGET(
-                                "/param.cgi?cmd=setmdalarm&-aname=server2&-switch=on&-interval=2&cmd=setalarmserverattr&-as_index=3&-as_server="
+                                "/param.cgi?cmd=setmdalarm&-aname=server2&-switch=on&-interval=1&cmd=setalarmserverattr&-as_index=3&-as_server="
                                         + ipCameraHandler.hostIp + "&-as_port=" + ipCameraHandler.serverPort
                                         + "&-as_path=/instar&-as_queryattr1=&-as_queryval1=&-as_queryattr2=&-as_queryval2=&-as_queryattr3=&-as_queryval3=&-as_activequery=1&-as_auth=0&-as_query1=0&-as_query2=0&-as_query3=0");
                         return;
@@ -232,18 +226,12 @@ public class InstarHandler extends ChannelDuplexHandler {
         }
     }
 
-    public void alarmTriggered(String alarm) {
+    void alarmTriggered(String alarm) {
         ipCameraHandler.logger.debug("Alarm has been triggered:{}", alarm);
         switch (alarm) {
-            case "/instar?&active=1":
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
+            case "/instar?&active=1":// The motion area boxes 1-4
             case "/instar?&active=2":
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
             case "/instar?&active=3":
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
             case "/instar?&active=4":
                 ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
                 break;
@@ -254,14 +242,8 @@ public class InstarHandler extends ChannelDuplexHandler {
                 ipCameraHandler.audioDetected();
                 break;
             case "/instar?&active=7":// Motion Area 1
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
             case "/instar?&active=8":// Motion Area 2
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
             case "/instar?&active=9":// Motion Area 3
-                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                break;
             case "/instar?&active=10":// Motion Area 4
                 ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
                 break;

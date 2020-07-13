@@ -531,7 +531,8 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
 <description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
-<default>true</default>
+<default>false</default>
+<advanced>true</advanced>
 </parameter>
 
 <parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Settings">
@@ -1048,7 +1049,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 <label>Use Continuous PTZ movements instead of Relative Moves.</label>
 <description>Select if you want Relative (false) or Continuous (true) movements if this camera supports PTZ.
 </description>
-<default>true</default>
+<default>false</default>
 <advanced>true</advanced>
 </parameter>
 

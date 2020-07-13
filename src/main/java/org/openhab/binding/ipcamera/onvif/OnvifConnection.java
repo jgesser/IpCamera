@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -192,28 +193,27 @@ public class OnvifConnection {
             case "RelativeMoveLeft":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><PanTilt x=\"0.08312236\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><PanTilt x=\"0.05000000\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveRight":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><PanTilt x=\"-0.08312236\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
-
+                        + "</ProfileToken><Translation><PanTilt x=\"-0.05000000\" y=\"0\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveUp":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><PanTilt x=\"0\" y=\"0.167510554\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><PanTilt x=\"0\" y=\"0.100000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveDown":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><PanTilt x=\"0\" y=\"-0.167510554\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><PanTilt x=\"0\" y=\"-0.100000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveIn":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><Zoom x=\"0.0240506344\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><Zoom x=\"0.0200000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "RelativeMoveOut":
                 return "<RelativeMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>"
                         + mediaProfileTokens.get(mediaProfileIndex)
-                        + "</ProfileToken><Translation><Zoom x=\"-0.0240506344\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
+                        + "</ProfileToken><Translation><Zoom x=\"-0.0200000000\" xmlns=\"http://www.onvif.org/ver10/schema\"/></Translation></RelativeMove>";
             case "Renew":
                 return "<Renew xmlns=\"http://docs.oasis-open.org/wsn/b-2\"><TerminationTime>PT1M</TerminationTime></Renew>";
             case "GetConfigurations":
@@ -765,9 +765,6 @@ public class OnvifConnection {
 
     public void connect(boolean useEvents) {
         if (!isConnected) {
-            // if (mainEventLoopGroup.isShutdown()) {
-            // mainEventLoopGroup = new NioEventLoopGroup();
-            // }
             sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
             this.useEvents = useEvents;
         }
@@ -784,18 +781,21 @@ public class OnvifConnection {
                 // sendEventRequest("Unsubscribe");
                 sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                 }
             }
             presetTokens.clear();
             mediaProfileTokens.clear();
-            // if (!mainEventLoopGroup.isShutdown()) {
-            // try {
-            // mainEventLoopGroup.awaitTermination(3, TimeUnit.SECONDS);
-            // } catch (InterruptedException e) {
-            // }
-            // }
+            if (!mainEventLoopGroup.isShutdown()) {
+                try {
+                    mainEventLoopGroup.awaitTermination(3, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                } finally {
+                    mainEventLoopGroup = new NioEventLoopGroup();
+                    bootstrap = null;
+                }
+            }
         }
     }
 }

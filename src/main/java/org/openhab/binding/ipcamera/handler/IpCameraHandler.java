@@ -1787,6 +1787,11 @@ public class IpCameraHandler extends BaseThingHandler {
                         onvifCamera.connect(true);
                     }
                     break;
+                case "INSTAR":
+                    noMotionDetected(CHANNEL_MOTION_ALARM);
+                    noMotionDetected(CHANNEL_PIR_ALARM);
+                    noAudioDetected();
+                    break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
                         logger.info("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
