@@ -168,27 +168,27 @@ These are listed in CAPS below. Example: The thing type for a generic onvif came
 
 ## Binding Configuration
 
-The binding can be configured with PaperUI by clicking on the pencil icon of any of the cameras that you have manually added via the PaperUI inbox. 
-To add a camera just press on the PLUS (+) icon in the INBOX of PaperUI.
+To add a camera just press on the PLUS (+) icon when in the INBOX of PaperUI.
+The binding can be configured with PaperUI by clicking on the pencil icon of any of the cameras that you have added via the PaperUI inbox.
 
 Cameras can also be manually configured with text files by doing the following. 
 DO NOT try and change a setting using PaperUI after using textual configuration as the two will conflict as the text file locks the settings preventing them from changing. 
-If using PaperUI, each time I add a new channel you will need to remove and re-add the camera which then gives it a new UID number (Unique ID number), which in turn can break your sitemap and HABPanel setups. 
+If using PaperUI, each time I add a new channel you will need to remove and re-add the camera which then gives it a new UID number (Unique ID number), which in turn can break your sitemap and HABPanel setups that use the UID. 
 Textual configuration has its advantages and locks the camera to use a simple UID which can be a plain text name like "DrivewayCamera".
 
-The configuration parameters that can be used in textual configuration are in CAPS, descriptions can be seen in PaperUI to help guide you on what each one does:
+Below is a list of the configuration parameters that can be used in textual configuration. If you do not specify any of these, the binding will use the default which should work in most cases. Very few of them are needed in order to get a working camera and examples are shown in the ``Full Example`` section.
 
 | Parameter | Description |
 |-|-|
-| `IPADDRESS`| Local address of your camera or NVR |
-| `PORT`| This port will be used for HTTP calls for fetching the snapshot and alarm states. |
-| `ONVIF_PORT`| The port your camera uses for ONVIF connections. This is needed for PTZ movement and the auto discovery of RTSP and snapshot URLs. |
-| `SERVER_PORT`| The port that will serve the video streams and snapshots back to openHAB without authentication. You can choose any number, but it must be unique and unused for each camera that you setup. Setting the port to -1 (default), will turn all file serving off and some features will fail to work. Also learn about the Ip Whitelist feature if you enable this. |
+| `IPADDRESS`| The IP address of your camera or NVR. You can also use Hostnames if your camera is not locked to a set IP. |
+| `PORT`| This port will be used for HTTP calls for fetching the snapshot and any API calls. |
+| `ONVIF_PORT`| The port your camera uses for ONVIF connections. This is needed for PTZ movement, Events, and the auto discovery of RTSP and snapshot URLs. |
+| `SERVER_PORT`| The port that will serve the video streams and snapshots back to openHAB without authentication. You can choose any number, but it must be unique and unused for each camera that you setup. Setting the port to -1 (default), will turn all file serving off and some features will fail to work. Also learn about the Ip Whitelist feature if you enable this and use your firewall to isolate your cameras from the internet. |
 | `USERNAME`| User name used to connect to your camera. Leave blank if your camera does not use login details. |
 | `PASSWORD`| Leave blank if your camera does not use login details. |
-| `ONVIF_MEDIA_PROFILE`| 0 is your cameras Mainstream and the numbers above 0 are the substreams if your camera has any. Any auto discovered URLs will use the stream this indicates. |
-| `POLL_CAMERA_MS`| Time in milliseconds between fetching a JPG. Note that most features will not poll and are done on demand to keep network traffic at a minimum. |
-| `IMAGE_UPDATE_EVENTS`| The `Image` channel can be set to update in a number of ways to help reduce network traffic. |
+| `ONVIF_MEDIA_PROFILE`| 0 is your cameras Mainstream and the numbers above 0 are the substreams if your camera has any. Any auto discovered URLs will use the stream this indicates. You can always override the URLs should you wish to use something different. It will default to 0 which is usually the highest quality feed. |
+| `POLL_CAMERA_MS`| Time in milliseconds between fetching a JPG. Note that most features will not poll and are done on demand to keep network traffic at a minimum. If using the GIF preroll feature, this will cause the camera to always fetch a snapshot every poll. |
+| `IMAGE_UPDATE_EVENTS`| The `Image` channel can be set to update in a number of ways to help reduce network traffic. Recommend you DO NOT USE the image channel. See section on snapshots and streams for more info.  |
 | | `0` - Default, the Image channel never updates. |
 | | `1` - Update the Image channel when the `updateImageNow` channel is turned on.|
 | | `2` - Start of Motion Alarms will cause the Image channel to update next poll. |
@@ -197,11 +197,11 @@ The configuration parameters that can be used in textual configuration are in CA
 | | `4` - During Motion Alarm the Image channel will update every poll until Alarm stops. |
 | | `5` - During Audio Alarm the Image channel will update every poll until Alarm stops. |
 | | `45` - During Motion and Audio Alarms the Image channel will update every poll until both alarms stop. |
-| `UPDATE_IMAGE`| The default state of the channel `updateImageNow` when Openhab starts. When switched OFF the image channel will NOT update unless you override this with the updateImageNow channel. |
-| `NVR_CHANNEL`| Set this to `1` if it is a standalone camera, or to the input channel number of your NVR that the camera is connected to. |
+| `UPDATE_IMAGE`| The default state of the channel `updateImageNow` when Openhab starts. When switched OFF (default) the image channel will NOT update unless you override this with the updateImageNow channel. |
+| `NVR_CHANNEL`| Set this to `1` (default) if it is a standalone camera, or to the input channel number of your NVR that the camera is connected to. |
 | `SNAPSHOT_URL_OVERRIDE`| Leave this empty to auto detect the snapshot URL if the camera has ONVIF. Enter a HTTP address if you wish to override with a different address, this can also make the camera connect quicker. Setting this to ffmpeg forces the camera to use ffmpeg to create the snapshots from the RTSP stream. |
-| `MOTION_URL_OVERRIDE`| Foscam only, for custom enable motion alarm use. More info found in Foscam setup below. |
-| `AUDIO_URL_OVERRIDE`| Foscam only, for custom enable audio alarm use. More info found in foscam setup below. |
+| `MOTION_URL_OVERRIDE`| Foscam only, for custom enable motion alarm use. More info found in Foscam's setup below. |
+| `AUDIO_URL_OVERRIDE`| Foscam only, for custom enable audio alarm use. More info found in Foscam's setup below. |
 | `STREAM_URL_OVERRIDE`| A HTTP URL for MJPEG format streams only, it can not be a RTSP url however if you enter 'ffmpeg' the mjpeg stream can be generated from the RTSP url if you have ffmpeg installed. |
 | `FFMPEG_INPUT`| Best if this stream is in H264 format and can be RTSP or HTTP urls. Leave this blank to use the auto detected RTSP address, or enter a URL for any type of stream that ffmpeg can use as an input. |
 | `FFMPEG_LOCATION`| The full path including the filename for where you have installed ffmpeg. For windows use e.g. this format: `c:\ffmpeg\bin\ffmpeg.exe` |
@@ -227,11 +227,9 @@ Thing ipcamera:DAHUA:BabyCamera "Baby Monitor" @ "Cameras"
     IPADDRESS="192.168.1.5",
     USERNAME="admin",
     PASSWORD="suitcase123456",
-    POLL_CAMERA_MS=1000,
     SERVER_PORT=50001,
     ONVIF_PORT=80,
     PORT=80,
-    GIF_PREROLL=0,
     GIF_POSTROLL=6,
     FFMPEG_OUTPUT="/tmpfs/babymonitor/"
 ]
@@ -242,7 +240,6 @@ Thing ipcamera:HIKVISION:DrivewayCam "DrivewayCam" @ "Cameras"
     IPADDRESS="192.168.1.6",
     PASSWORD="suitcase123456",
     USERNAME="admin",
-    POLL_CAMERA_MS=1000,
     SERVER_PORT=50002,
     FFMPEG_OUTPUT="/tmpfs/DrivewayCam/",
     FFMPEG_INPUT="rtsp://192.168.1.6:554/Streaming/Channels/103?transportmode=unicast&profile=Profile_1"
@@ -309,15 +306,18 @@ It can also be handy to use this when doing testing as it allows motion to be si
 
 This control can be used to manually start and stop updating the Image channel with a picture, or it will start and stop FFmpeg from creating snapshots from a RTSP source depending on how the bindings config parameters are set. 
 The `UPDATE_IMAGE` config sets the state this control is set to on startup/reboot of Openhab.
-When ON the image channel will update at the `POLL_CAMERA_MS` rate. Note that cameras that create snapshots from RTSP using FFmpeg will not update the image channel at all and the better methods like ipcamera.jpg covered in this readme are the recommended way to achieve a picture. 
+When ON the image channel will update at the `POLL_CAMERA_MS` rate. 
+Note that cameras that create snapshots from RTSP using FFmpeg will not update the image channel at all and the better methods like ipcamera.jpg covered in this readme, are the recommended way to achieve a picture. 
 When OFF the Image channel will NOT update, but the other methods of achieving a picture or stream will still work. 
 If you need to update the image channel more often then every 5 seconds, please see the snapshot and stream sections of this readme to learn how to get a picture without using the Image channel. 
 
 **ffmpegMotionControl**
 
-This control allows FFmpeg to detect movement from a RTSP or HTTP source and inform Openhab. It is best described in the first few posts of this thread.
+This control allows FFmpeg to detect movement from a RTSP or HTTP source and inform Openhab. The higher the number, the less sensitive the camera is to movement or you have to wave your hand faster to trigger the alarm.
+It is best described in the first few posts of this thread, along with how to fault find it using a terminal/command line.
 <https://community.openhab.org/t/how-to-turn-a-cameras-rtsp-stream-into-motion-detection/89906>
-You can link a Switch and a Slider to this channel at the same time to have ON/OFF control as well as a slider to change the threshold.
+You can link a Switch and a Slider to this channel at the same time to have both ON/OFF switch control, as well as a slider to change the threshold.
+The channel that will move is called ``ffmpegMotionAlarm``.
 
 **thresholdAudioAlarm**
 
@@ -336,6 +336,7 @@ When `GIF_PREROLL` is set to a value higher than 0, the binding will create and 
 The snapshot files are not deleted but are overwritten each time a gif is created.
 These files 'snapshotxx.jpg' can also be used by yourself to create and email Jpeg files also giving you a number to choose from in case your camera has delayed footage. 
 The files are placed into the folder specified by the config `FFMPEG_OUTPUT`.
+You can now change the files name by using the channel ``gifFilename`` Just change the string in that channel and that is what the file will be called, handy if you want the date and time stamped into the file.
 
 **lastMotionType**
 
@@ -416,7 +417,7 @@ Thing ipcamera:DAHUA:001
 [ 
     IPADDRESS="192.168.0.5", PASSWORD="suitcase123456",
     USERNAME="admin",
-    POLL_CAMERA_MS=2000,
+    POLL_CAMERA_MS=1000,
     SERVER_PORT=54321,
     FFMPEG_OUTPUT="/tmpfs/camera1/"
 ]
@@ -425,7 +426,7 @@ Thing ipcamera:HIKVISION:002
 [
     IPADDRESS="192.168.0.6", PASSWORD="suitcase123456",
     USERNAME="admin",
-    POLL_CAMERA_MS=2000,
+    POLL_CAMERA_MS=1000,
     SERVER_PORT=54322,
     FFMPEG_OUTPUT="/tmpfs/camera2/"
 ]
@@ -634,10 +635,10 @@ item:
 
 ```java
 
-Number TestCamGotoPreset "Goto Preset" { channel="ipcamera:ONVIF:TestCam:gotoPreset" }
-Dimmer TestCamPan "Pan [%d] left/right" { channel="ipcamera:ONVIF:TestCam:pan" }
-Dimmer TestCamTilt "Tilt [%d] up/down" { channel="ipcamera:ONVIF:TestCam:tilt" }
-Dimmer TestCamZoom "Zoom [%d] in/out" { channel="ipcamera:ONVIF:TestCam:zoom" }
+Number BabyCamGotoPreset "Goto Preset" { channel="ipcamera:DAHUA:BabyCamera:gotoPreset" }
+Dimmer BabyCamPan "Pan [%d] left/right" { channel="ipcamera:DAHUA:BabyCamera:pan" }
+Dimmer BabyCamTilt "Tilt [%d] up/down" { channel="ipcamera:DAHUA:BabyCamera:tilt" }
+Dimmer BabyCamZoom "Zoom [%d] in/out" { channel="ipcamera:DAHUA:BabyCamera:zoom" }
 
 ```
 
@@ -645,13 +646,13 @@ sitemap:
 
 ```java
 
-Selection item=TestCamGotoPreset
-Setpoint item=TestCamPan
-Setpoint item=TestCamTilt 
-Setpoint item=TestCamZoom
-Slider item=TestCamPan
-Slider item=TestCamTilt 
-Slider item=TestCamZoom
+Selection item=BabyCamGotoPreset
+Switch item=BabyCamPan mappings=[INCREASE="Left",OFF="STOP",DECREASE="Right"]
+Switch item=BabyCamTilt mappings=[INCREASE="Down",OFF="STOP",DECREASE="Up"]
+Switch item=BabyCamZoom mappings=[INCREASE="Zoom In",OFF="STOP",DECREASE="Zoom Out"]
+Slider item=BabyCamPan icon=movecontrol
+Slider item=BabyCamTilt icon=movecontrol
+Slider item=BabyCamZoom icon=zoom
 
 ```
 

@@ -2058,27 +2058,27 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 
 <channel-type id="image">
 <item-type>Image</item-type>
-<label>Snapshot from camera</label>
+<label>Image</label>
 <description>Low frame rate and low bandwidth to keep demands on your internet connection low when using to remote view.</description>
 <category>Camera</category>
 </channel-type>
 
 <channel-type id="updateImageNow">
 <item-type>Switch</item-type>
-<label>Update the Image</label>
+<label>Update Image</label>
 <description>This can be used to trigger snapshot updates when an external PIR, button or other form of sensor turns this channel ON.</description>
 </channel-type>
 
 <channel-type id="gifFilename">
 <item-type>String</item-type>
-<label>GIF filename</label>
+<label>GIF Filename</label>
 <description>The filename you wish the GIF to be named with.</description>
 <category>Text</category>
 </channel-type>
 
 <channel-type id="updateGif">
 <item-type>Switch</item-type>
-<label>Create GIF</label>
+<label>Update GIF</label>
 <description>Turn ON to create an animated GIF called ipcamera.gif with ffmpeg. When the file is created the switch will move itself back to OFF.</description>
 </channel-type>
 
@@ -2345,7 +2345,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		
 <channel-type id="externalMotion">
 <item-type>Switch</item-type>
-<label>External Motion Sensors</label>
+<label>External Motion Sensor Input</label>
 <description>Use other sensors external to the camera like a ZWave PIR sensor to flag that the camera has motion in its field of view.</description>
 <category>Motion</category>
 </channel-type>

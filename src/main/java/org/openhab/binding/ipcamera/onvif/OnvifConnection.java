@@ -703,6 +703,11 @@ public class OnvifConnection {
         if (sectionHeaderBeginning > 0) {
             result = result.substring(0, sectionHeaderBeginning);
         }
+        // remove any ">" and anything after it.
+        sectionHeaderBeginning = result.indexOf(">");
+        if (sectionHeaderBeginning > 0) {
+            result = result.substring(0, sectionHeaderBeginning);
+        }
         return result;
     }
 

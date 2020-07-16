@@ -74,7 +74,7 @@ public class HikvisionHandler extends ChannelDuplexHandler {
             if (content.isEmpty()) {
                 return;
             }
-            ipCameraHandler.logger.trace("HTTP Result back from camera is \t:{}:", content);
+            logger.trace("HTTP Result back from camera is \t:{}:", content);
 
             if (content.contains("--boundary")) {// Alarm checking goes in here//
                 if (content.contains("<EventNotificationAlert version=\"")) {
@@ -135,7 +135,6 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             byte indexInLists = (byte) ipCameraHandler.listOfRequests.indexOf(
                                     "/ISAPI/System/Video/inputs/channels/" + nvrChannel + "01/motionDetection");
                             if (indexInLists >= 0) {
-                                ipCameraHandler.logger.debug("Storing new Motion reply {}", content);
                                 ipCameraHandler.listOfReplies.set(indexInLists, content);
                             }
                         } finally {
@@ -148,13 +147,12 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             ipCameraHandler.setChannelState(CHANNEL_ENABLE_MOTION_ALARM, OnOffType.valueOf("OFF"));
                         }
                         break;
-                    case "LineDetection>":
+                    case "LineDetection":
                         ipCameraHandler.lock.lock();
                         try {
                             byte indexInLists = (byte) ipCameraHandler.listOfRequests
                                     .indexOf("/ISAPI/Smart/LineDetection/" + nvrChannel + "01");
                             if (indexInLists >= 0) {
-                                ipCameraHandler.logger.debug("Storing new Line Crossing reply {}", content);
                                 ipCameraHandler.listOfReplies.set(indexInLists, content);
                             }
                         } finally {
@@ -174,7 +172,6 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             byte indexInLists = (byte) ipCameraHandler.listOfRequests
                                     .indexOf("/ISAPI/System/Video/inputs/channels/" + nvrChannel + "/overlays/text/1");
                             if (indexInLists >= 0) {
-                                ipCameraHandler.logger.debug("Storing new text overlay reply {}", content);
                                 ipCameraHandler.listOfReplies.set(indexInLists, content);
                             }
                         } finally {
@@ -213,7 +210,6 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             byte indexInLists = (byte) ipCameraHandler.listOfRequests
                                     .indexOf("/ISAPI/Smart/FieldDetection/" + nvrChannel + "01");
                             if (indexInLists >= 0) {
-                                ipCameraHandler.logger.debug("Storing new FieldDetection reply {}", content);
                                 ipCameraHandler.listOfReplies.set(indexInLists, content);
                             }
                         } finally {
@@ -238,6 +234,9 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                                         "Stopping checks for alarm inputs as camera appears to be missing this feature.");
                             }
                         }
+                        break;
+                    default:
+                        logger.debug("Unhandled reply-{}.", content);
                         break;
                 }
             }
