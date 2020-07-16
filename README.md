@@ -660,16 +660,16 @@ Slider item=BabyCamZoom icon=zoom
 Moving the camera to an EXACT repeatable location (Preset 1 saved location) with a rule:
 
 ```java
-TestCamGotoPreset.sendCommand(1)
+BabyCamGotoPreset.sendCommand(1)
 ```
 
 
 Moving the camera to an EXACT repeatable location using Absolute movement with a rule:
 
 ```java
-TestCamPan.sendCommand(22)
-TestCamTilt.sendCommand(60)
-TestCamZoom.sendCommand(0)
+BabyCamPan.sendCommand(22)
+BabyCamTilt.sendCommand(60)
+BabyCamZoom.sendCommand(0)
 ```
 
 
