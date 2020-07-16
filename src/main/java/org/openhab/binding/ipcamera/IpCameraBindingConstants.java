@@ -108,6 +108,7 @@ public class IpCameraBindingConstants {
     public static final String CHANNEL_ENABLE_LED = "enableLED";
     public static final String CHANNEL_ENABLE_PIR_ALARM = "enablePirAlarm";
     public static final String CHANNEL_PIR_ALARM = "pirAlarm";
+    public static final String CHANNEL_CELL_MOTION_ALARM = "cellMotionAlarm";
     public static final String CHANNEL_ENABLE_FIELD_DETECTION_ALARM = "enableFieldDetectionAlarm";
     public static final String CHANNEL_FIELD_DETECTION_ALARM = "fieldDetectionAlarm";
     public static final String CHANNEL_PARKING_ALARM = "parkingAlarm";

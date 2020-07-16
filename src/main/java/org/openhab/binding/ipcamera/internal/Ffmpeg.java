@@ -43,8 +43,8 @@ public class Ffmpeg {
     private String ffmpegCommand = "", format = "";
     private String[] commandArray;
     private StreamRunning streamRunning = new StreamRunning();
-    private int keepAlive = 60;
-    boolean running = false;
+    private int keepAlive = 8;
+    private boolean running = false;
 
     public void setKeepAlive(int seconds) {
         if (seconds == -1) {
@@ -98,7 +98,7 @@ public class Ffmpeg {
                             logger.debug("{}", line);
                             if (line.contains("lavfi.")) {
                                 if (countOfMotions == 4) {
-                                    ipCameraHandler.motionDetected(CHANNEL_FFMPEG_MOTION_CONTROL);
+                                    ipCameraHandler.motionDetected(CHANNEL_FFMPEG_MOTION_ALARM);
                                 } else {
                                     countOfMotions++;
                                 }
@@ -107,7 +107,7 @@ public class Ffmpeg {
                                     countOfMotions--;
                                     countOfMotions--;
                                     if (countOfMotions <= 0) {
-                                        ipCameraHandler.noMotionDetected(CHANNEL_FFMPEG_MOTION_CONTROL);
+                                        ipCameraHandler.noMotionDetected(CHANNEL_FFMPEG_MOTION_ALARM);
                                     }
                                 }
                             } else if (line.contains("silence_start")) {
@@ -163,7 +163,7 @@ public class Ffmpeg {
             }
         }
         if (keepAlive != -1) {
-            keepAlive = 60;
+            keepAlive = 8;
         }
     }
 
@@ -187,7 +187,7 @@ public class Ffmpeg {
                     ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("OFF"));
                 }
             }
-            keepAlive = 60;
+            keepAlive = 8;
         }
     }
 }

@@ -518,6 +518,12 @@ public class OnvifConnection {
         logger.debug("Onvif Event Topic:{}, Data:{}, Value:{}", topic, dataName, dataValue);
         switch (topic) {
             case "RuleEngine/CellMotionDetector/Motion":
+                if (dataValue.equals("true")) {
+                    ipCameraHandler.motionDetected(CHANNEL_CELL_MOTION_ALARM);
+                } else if (dataValue.equals("false")) {
+                    ipCameraHandler.noMotionDetected(CHANNEL_CELL_MOTION_ALARM);
+                }
+                break;
             case "VideoSource/MotionAlarm":
                 if (dataValue.equals("true")) {
                     ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
@@ -673,7 +679,7 @@ public class OnvifConnection {
         return results;
     }
 
-    String fetchXML(String message, String sectionHeading, String key) {
+    public static String fetchXML(String message, String sectionHeading, String key) {
         String result = "";
         int sectionHeaderBeginning = 0;
         if (!sectionHeading.equals("")) {// looking for a sectionHeading

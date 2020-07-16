@@ -203,9 +203,35 @@ public class OnvifDiscovery {
 
     public void discoverCameras() throws UnknownHostException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
-        final String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><e:Envelope xmlns:e=\"http://www.w3.org/2003/05/soap-envelope\"  xmlns:w=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"  xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"  xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\"><e:Header><w:MessageID>uuid:"
+        final String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><e:Envelope xmlns:e=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:w=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\"><e:Header><w:MessageID>uuid:"
                 + uuid
-                + "</w:MessageID><w:To e:mustUnderstand=\"true\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</w:To><w:Action a:mustUnderstand=\"true\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</w:Action></e:Header><e:Body><d:Probe><d:Types>dn:NetworkVideoTransmitter</d:Types></d:Probe></e:Body></e:Envelope>";
+                + "</w:MessageID><w:To e:mustUnderstand=\"true\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</w:To><w:Action a:mustUnderstand=\"true\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</w:Action></e:Header><e:Body><d:Probe><d:Types xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></d:Probe></e:Body></e:Envelope>";
+
+        // final String xml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
+        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
+        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:"
+        // + uuid
+        // +
+        // "</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
+        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
+        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
+        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
+        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope><s:Envelope
+        // xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
+        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
+        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:9bdc3826-955c-428a-8553-72ed7aaffe3a</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
+        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
+        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
+        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
+        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope><s:Envelope
+        // xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
+        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
+        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:9bdc3826-955c-428a-8553-72ed7aaffe3a</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
+        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
+        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
+        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
+        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope>";
+
         ByteBuf discoveryProbeMessage = Unpooled.copiedBuffer(xml, 0, xml.length(), StandardCharsets.UTF_8);
         InetSocketAddress localNetworkAddress = new InetSocketAddress(0);// Listen for replies on all connections.
         InetSocketAddress multiCastAddress = new InetSocketAddress(InetAddress.getByName("239.255.255.250"), 3702);

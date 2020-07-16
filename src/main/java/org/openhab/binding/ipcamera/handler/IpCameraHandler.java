@@ -347,54 +347,6 @@ public class IpCameraHandler extends BaseThingHandler {
         }
     }
 
-    public void hikChangeSetting(String httpGetPutURL, String findOldValue, String newValue) {
-        String body;
-        byte indexInLists;
-        lock.lock();
-        try {
-            indexInLists = (byte) listOfRequests.indexOf(httpGetPutURL);
-        } finally {
-            lock.unlock();
-        }
-        if (indexInLists >= 0) {
-            lock.lock();
-            if (listOfReplies.get(indexInLists) != "") {
-                body = listOfReplies.get(indexInLists);
-                lock.unlock();
-                logger.debug("An OLD reply from the camera was:{}", body);
-                body = body.replace(findOldValue, newValue);
-                logger.debug("Body for this PUT is going to be:{}", body);
-                FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("PUT"),
-                        httpGetPutURL);
-                request.headers().set(HttpHeaderNames.HOST, ipAddress);
-                request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-                request.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/xml; charset=\"UTF-8\"");
-                ByteBuf bbuf = Unpooled.copiedBuffer(body, StandardCharsets.UTF_8);
-                request.headers().set(HttpHeaderNames.CONTENT_LENGTH, bbuf.readableBytes());
-                request.content().clear().writeBytes(bbuf);
-                sendHttpPUT(httpGetPutURL, request);
-            } else {
-                lock.unlock();
-            }
-        } else {
-            sendHttpGET(httpGetPutURL);
-            logger.warn(
-                    "Did not have a reply stored before hikChangeSetting was run, try again shortly as a reply has just been requested.");
-        }
-    }
-
-    public void hikSendXml(String httpPutURL, String xml) {
-        logger.trace("Body for PUT:{} is going to be:{}", httpPutURL, xml);
-        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("PUT"), httpPutURL);
-        request.headers().set(HttpHeaderNames.HOST, ipAddress);
-        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-        request.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/xml; charset=\"UTF-8\"");
-        ByteBuf bbuf = Unpooled.copiedBuffer(xml, StandardCharsets.UTF_8);
-        request.headers().set(HttpHeaderNames.CONTENT_LENGTH, bbuf.readableBytes());
-        request.content().clear().writeBytes(bbuf);
-        sendHttpPUT(httpPutURL, request);
-    }
-
     public void sendHttpPUT(String httpRequestURL, FullHttpRequest request) {
         putRequestWithBody = request; // use Global so the authhandler can use it when resent with DIGEST.
         sendHttpRequest("PUT", httpRequestURL, null);
@@ -1992,7 +1944,7 @@ public class IpCameraHandler extends BaseThingHandler {
         closeAllChannels();
 
         if (ffmpegHLS != null) {
-            ffmpegHLS.setKeepAlive(60);
+            ffmpegHLS.setKeepAlive(8);
             ffmpegHLS.stopConverting();
             ffmpegHLS = null;
         }
