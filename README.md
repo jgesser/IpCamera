@@ -683,35 +683,39 @@ There are advantages to using these methods from the binding instead of directly
 
 + Use the cameras URL and fetch it directly so it passes from the camera to your end device ie a tablet without passing any data through the openHAB server. 
 For cameras like Dahua that refuse to allow DIGEST to be turned off, this is not an option. 
-The binding has some advantages which are explained below so even if your camera can work directly, you may not wish to do so.
+The binding has some advantages which are explained below, so even if your camera can work directly, you may not wish to do so.
 + Request a snapshot with the url ``http://192.168.xxx.xxx:54321/ipcamera.jpg`` (with 54321 being the SERVER_PORT number that you specify in the bindings setup) this will return the current snapshot without needing to wait for the camera to create and send a snapshot.
 This file does not exist on disk and is served out of ram to keep disk writes to a minimum with this binding. 
 This means the binding can serve a jpg file much faster than a camera can directly as a camera usually waits for a keyframe, then has to compresses the data, before it can then be sent. 
 All of this takes time giving you a delay compared to serving the file from Ram and can make a sitemap or habpanel UI feel slow to respond if the pictures take time to appear.
-The ipcamera.jpg can be cast as most cameras can not cast their snapshots without using the binding.
+The ipcamera.jpg can also be cast, as most cameras can not cast their snapshots without using the binding.
 + Use the ``http://192.168.xxx.xxx:54321/snapshots.mjpeg`` to request a stream of snapshots to be delivered in mjpeg format. 
-See the streaming section for more info but this only works if the Poll time is 8 seconds or lower. 
-For poll times above 8 seconds use the Image channel.
-+ Use the Create GIF feature and use a preroll value >0. 
+See the streaming section for more info.
+This may have stop working in some browsers if the Poll time is more than 8 seconds. 
+For poll times above 8 seconds use the Image channel or ipcamera.jpg set to refresh.
++ Use the update GIF feature and use a preroll value >0. 
 This creates a number of snapshots in the ffmpeg output folder called snapshotXXX.jpg where XXX starts at 0 and increases each poll amount of time. 
 This means you can get a snapshot from an exact amount of time before, on, or after triggering the GIF to be created. 
-Handy for cameras which lag due to slow processors and buffering. 
+Handy for cameras which lag due to slow processors and buffering, or if you do not want a hand blocking the image when the door bell was pushed. 
 These snapshots can be fetched either directly as they exist on disk, or via this url format. 
 ``http://192.168.xxx.xxx:54321/snapshot0.jpg`` Where the IP is your Openhab server and the port is what is setup in the binding as the SERVER_PORT.
-+ The Image channel can be used but is not recommended unless the poll time is above 8 seconds.
-The snapshots.mjpeg is a better way or if using 1 second updates the newer autofps.mjpeg which are discussed in the streaming section of this readme.
++ The Image channel can be used but is not recommended unless the poll time is above 8 seconds as the image data passes through the event bus of Openhab that can create bottlenecks.
+The snapshots.mjpeg is a better way, or the newer autofps.mjpeg.
 + You can also read the raw image data directly from the image channel and use it in rules, there are some examples on the forum how to do this, however it is far easier to use the above methods.
 + Also worth a mention is that you can off load cameras to a software package running on a separate hardware server. These have their advantages, but can be overkill depending on what you plan to do with your cameras. Motion, Shinobi and Zoneminder are opensource projects worth checking out.
 
 
-See this forum thread for examples of how to use snapshots and streams.
+See this forum thread for examples of how to use snapshots and streams in a sitemap.
 <https://community.openhab.org/t/ip-camera-how-to-clickable-thumbnail-overview-in-sitemaps-that-opens-up-to-a-larger-view/77990>
+
+If you use Habpanel, then these widgets are worth checking out.
+<https://community.openhab.org/t/custom-widget-camera-clickable-thumbnails-that-open-a-stream/101275>
 
 ## How to get working video streams
 
 IMPORTANT:
 The binding has its own file server that works by allowing access to the snapshot and video streams with no user/password for requests that come from an IP located in the white list. 
-Requests from outside IP's or internal requests not on the white list will fail to get any answer. 
+Requests from outside IP's or internal requests that are not on the white list will fail to get any answer. 
 If you prefer to use your own firewall instead, you can also choose to make the ip whitelist equal "DISABLE" (now the default) to turn this feature off and then all internal IP's will have access.
 
 There are now multiple ways to get a moving picture:
