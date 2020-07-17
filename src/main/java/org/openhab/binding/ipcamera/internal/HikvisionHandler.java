@@ -147,6 +147,32 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             ipCameraHandler.setChannelState(CHANNEL_ENABLE_MOTION_ALARM, OnOffType.valueOf("OFF"));
                         }
                         break;
+                    case "IOInputPort version=":
+                        ipCameraHandler.lock.lock();
+                        try {
+                            byte indexInLists = (byte) ipCameraHandler.listOfRequests
+                                    .indexOf("/ISAPI/System/IO/inputs/" + nvrChannel);
+                            if (indexInLists >= 0) {
+                                ipCameraHandler.listOfReplies.set(indexInLists, content);
+                            }
+                        } finally {
+                            ipCameraHandler.lock.unlock();
+                        }
+                        if (content.contains("<enabled>true</enabled>")) {
+                            ipCameraHandler.setChannelState(CHANNEL_ENABLE_EXTERNAL_ALARM_INPUT,
+                                    OnOffType.valueOf("ON"));
+                        } else if (content.contains("<enabled>false</enabled>")) {
+                            ipCameraHandler.setChannelState(CHANNEL_ENABLE_EXTERNAL_ALARM_INPUT,
+                                    OnOffType.valueOf("OFF"));
+                        }
+                        if (content.contains("<triggering>low</triggering>")) {
+                            ipCameraHandler.setChannelState(CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT,
+                                    OnOffType.valueOf("ON"));
+                        } else if (content.contains("<triggering>high</triggering>")) {
+                            ipCameraHandler.setChannelState(CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT,
+                                    OnOffType.valueOf("OFF"));
+                        }
+                        break;
                     case "LineDetection":
                         ipCameraHandler.lock.lock();
                         try {
@@ -372,6 +398,12 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                     ipCameraHandler
                             .sendHttpGET("/ISAPI/System/Video/inputs/channels/" + nvrChannel + "/overlays/text/1");
                     return;
+                case CHANNEL_ENABLE_EXTERNAL_ALARM_INPUT:
+                    ipCameraHandler.sendHttpGET("/ISAPI/System/IO/inputs/" + nvrChannel);
+                    return;
+                case CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT:
+                    ipCameraHandler.sendHttpGET("/ISAPI/System/IO/inputs/" + nvrChannel);
+                    return;
             }
             return; // Return as we have handled the refresh command above and don't need to
                     // continue further.
@@ -387,6 +419,24 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                             "displayText", "<displayText>" + command.toString() + "</displayText>");
                     hikChangeSetting("/ISAPI/System/Video/inputs/channels/" + nvrChannel + "/overlays/text/1",
                             "enabled", "<enabled>true</enabled>");
+                }
+                return;
+            case CHANNEL_ENABLE_EXTERNAL_ALARM_INPUT:
+                logger.debug("Changing enabled state of the external input 1 to {}", command.toString());
+                if (command.toString().equals("ON")) {
+                    hikChangeSetting("/ISAPI/System/IO/inputs/" + nvrChannel, "enabled", "<enabled>true</enabled>");
+                } else {
+                    hikChangeSetting("/ISAPI/System/IO/inputs/" + nvrChannel, "enabled", "<enabled>false</enabled>");
+                }
+                return;
+            case CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT:
+                logger.debug("Changing triggering state of the external input 1 to {}", command.toString());
+                if (command.toString().equals("ON")) {
+                    hikChangeSetting("/ISAPI/System/IO/inputs/" + nvrChannel, "triggering",
+                            "<triggering>low</triggering>");
+                } else {
+                    hikChangeSetting("/ISAPI/System/IO/inputs/" + nvrChannel, "triggering",
+                            "<triggering>high</triggering>");
                 }
                 return;
             case CHANNEL_ENABLE_PIR_ALARM:

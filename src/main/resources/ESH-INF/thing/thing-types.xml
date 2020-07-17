@@ -1587,6 +1587,8 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="enableAudioAlarm" typeId="enableAudioAlarm"/>
 			<channel id="audioAlarm" typeId="audioAlarm"/>		 
 			<channel id="activateAlarmOutput" typeId="activateAlarmOutput"/>
+			<channel id="enableExternalAlarmInput" typeId="enableExternalAlarmInput"/>
+			<channel id="triggerExternalAlarmInput" typeId="triggerExternalAlarmInput"/>
 			<channel id="externalAlarmInput" typeId="externalAlarmInput"/>
 			<channel id="textOverlay" typeId="textOverlay"/>
 			<channel id="pan" typeId="pan"/>
@@ -2316,9 +2318,15 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		
 		<channel-type id="enableExternalAlarmInput">
 		<item-type>Switch</item-type>
-		<label>Alarm Inputs ON/OFF</label>
+		<label>Alarm In 1 ON/OFF</label>
 		<description>Turn the External Alarm Input feature on and off.</description>
 		</channel-type>
+		
+		<channel-type id="triggerExternalAlarmInput">
+        <item-type>Switch</item-type>
+        <label>Alarm In 1 TRIGGER high OFF/low ON</label>
+        <description>Change the External Alarm Input to trigger on high or low states.</description>
+        </channel-type>
 		
 		<channel-type id="externalAlarmInput">
 		<item-type>Switch</item-type>
