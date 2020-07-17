@@ -673,6 +673,25 @@ BabyCamZoom.sendCommand(0)
 ```
 
 
+## FFmpeg Motion and Audio Alarms
+
+Any camera with a RTSP feed can use FFmpeg to create either a ``motionAlarm`` or ``audioAlarm``. Even if your camera has a motion alarm you may find that it does not provide enough flexibility to ignore moving trees or have its sensitivity adjusted on the fly. This is where this feature can come in handy as you can add your own FFmpeg agruments to use the Crop feature as this wont effect the video feeds you watch.
+<https://ffmpeg.org/ffmpeg-filters.html#Examples-52>
+
+
+To get this working:
+
++ Provide a RTSP url to the binding to the config ``FFMPEG_MOTION_INPUT`` or you can leave it blank to use the auto detected url if your camera has ONVIF. You can provide a low resolution feed to this config to keep the CPU load down without having to sacrifice your main camera feeds quality.
++ Have FFmpeg installed and the binding knows the location of where to find it.
++ You have the resolution and FPS at realistic settings for your CPU, you need to reach 1.x speed otherwise the alarm will lag further behind realtime the longer you have this running. 1080p and 10 fps for a ARM processor is probably a good place to start testing or even lower if you can.
++ Set the ``ffmpegMotionControl`` channel to 16 with a slider control and if the alarm stays on increase the value until it works as desired. If it will not trigger, lower the control until it does.
++ Set the ``ffmpegMotionControl`` to OFF or 0 and it stops using your CPU. You can link this same channel to BOTH a switch and a slider at the same time if you like to have both types of controls.
++ The output of the alarm will go to a channel called ``ffmpegMotionAlarm`` and you can use the ``lastMotionType`` channel to determine which alarm was last tripped if your camera has multiple alarm types.
+
+**audioAlarm**
+
+This works in much the same way, just with different channels. If you setup a lower resolution url in the config ``FFMPEG_MOTION_INPUT`` you need to ensure it contains audio otherwise this feature wont work.
+
 
 ## Image / Snapshots
 
@@ -1196,8 +1215,11 @@ This allows you to search and only show what you care about, ie a particular war
 **openHAB.log** 
 
 This file displays the information from all bindings and can have the amount of information turned up or down on a per binding basis. 
-The default level is INFO and is the middle level of 5 settings you can use. The OpenHAB documentation goes into this in more detail and is kept up to date. 
-Using the KARAF console you can use these commands to turn the logging up and down to suit your needs. If you are having issues with the binding not working with your camera, then TRACE will give me everything in DEBUG with the additional reply packets from the camera for me to use for fault finding. Because the TRACE shows the cameras replies it often shows you in plain english what the camera is telling you is wrong greatly speeding up the diagnosis of any issues, so please use this to find what is wrong before asking for help.
+The default level is INFO and is the middle level of 5 settings you can use. 
+The OpenHAB documentation goes into this in more detail and is kept up to date. 
+Using the KARAF console you can use these commands to turn the logging up and down to suit your needs. 
+If you are having issues with the binding not working with your camera, then TRACE will give me everything in DEBUG with the additional reply packets from the camera for me to use for fault finding. 
+Because the TRACE shows the cameras replies, it often shows you in plain english what the camera is telling you is wrong greatly speeding up the diagnosis of any issues, so please use this to find what is wrong before asking for help.
 
 
 ```
@@ -1212,12 +1234,15 @@ log:set TRACE org.openhab.binding.ipcamera
 
 ```
 
+TIP: If your in the console you can type in ``log:tail`` to watch the logs.
+
 
 **events.log**
 
 By default openHAB will log all image channel updates as an event into a file called events.log, this file can quickly grow if you have multiple cameras all updating the image channel every second. 
 
-I believe it is possible for enough high resolution cameras to flood and swamp the event bus with more incoming data then the system can process even if the logs are disabled, so I highly recommend to not use the Image channel and instead use another method outlined in the snapshot section of this readme file. If the data is coming in faster then it can be processed it will result in an Out Off Memory Error (OOME) that can halt your Openhab server so if your reading this to shut down the logging, reconsider the need to use the Image channel.
+I believe it is possible for enough high resolution cameras to flood and swamp the event bus with more incoming data then the system can process even if the logs are disabled, so I highly recommend to not use the Image channel and instead use another method outlined in the snapshot section of this readme file. 
+If the data is coming in faster then it can be processed it will result in an Out Off Memory Error (OOME) that can halt your Openhab server, so if your reading this to shut down the logging, reconsider the need to use the Image channel.
 
 If you still wish to use the Image channel, the following is how to deal with the log output that is created as the raw picture data in text format is ugly and makes the log very hard to read.
 
@@ -1227,7 +1252,7 @@ If you still wish to use the Image channel, the following is how to deal with th
 
 The openHAB event.log does not allow normal filtering at a binding level due to the log being a pure output from the event bus.
 
-To disable the event.log use this command in Karaf.
+To disable the event.log you can use this command in Karaf console.
 
 
 ```
@@ -1263,13 +1288,12 @@ You can specify the item name in the filter to remove just 1 camera, or you can 
 
 ## Roadmap for further development
 
-Currently the focus is on creating a stable framework that allows all brands to be used in a consistent way, new features that most users wont use are not held as highly as having a stable binding. 
-Sharing rules with others will become easier if all brands are handled the same way and with channels that have the same name.
+Currently the focus is on creating a stable framework that allows all brands to be used in a consistent way, new features that most users wont use are not held as highly as having a stable binding. After the binding is merged the extra features can be added over time.
 
 If you need a feature added that is in an API and you can not program, please raise an issue ticket at Github with a sample of what a browser shows when you enter in the URL, it is usually very quick to add features.
 
 If you wish to contribute then please create an issue ticket first to discuss how things will work before doing any coding. 
-This is for multiple reasons due to needing to keep things CONSISTENT between brands, lower the risk of breaking changes, and also keep the binding easy to maintain. 
+This is for multiple reasons due to needing to keep things CONSISTENT between brands, lower the risk of breaking changes, and also keep the binding easy to maintain.
 
 The following list is a great place to start helping with this binding if you wish to contribute. 
 Any feedback, push requests and ideas are welcome, just please create a Github issue with your plans first.
@@ -1286,6 +1310,6 @@ Areas the binding could be improved are:
 + Any of the Onvif methods not implemented.
 
 
-If you do wish to implement more Onvif features, I have found some example SOAP contents found here to be useful for most requests and responses.
+If you do wish to implement more Onvif features, I have found some example SOAP contents at the link below to be useful for most requests and responses.
 Often example SOAP traces are not in the Onvif documentation.
 <https://git.linuxmce.org/garagevibes/linuxmce/tree/08c52739954c0bfce7443eddc1ad4f6936a70fbe/src/Advanced_IP_Camera/onvif>

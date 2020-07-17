@@ -1126,10 +1126,12 @@ public class IpCameraHandler extends BaseThingHandler {
                         return;
                     }
                 }
+                String input = (config.get(CONFIG_FFMPEG_MOTION_INPUT) == null) ? rtspUri
+                        : config.get(CONFIG_FFMPEG_MOTION_INPUT).toString();
                 String OutputOptions = "-f null -";
                 String filterOptions = "";
                 inOptions = "-rtsp_transport tcp";
-                if (!rtspUri.contains("rtsp")) {
+                if (!input.contains("rtsp")) {
                     inOptions = "";
                 }
                 if (audioAlarmEnabled == false) {
@@ -1144,7 +1146,7 @@ public class IpCameraHandler extends BaseThingHandler {
                             .concat(" -vf select='gte(scene," + motionThreshold + ")',metadata=print");
                 }
                 ffmpegRtspHelper = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
-                        rtspUri, filterOptions + config.get(CONFIG_FFMPEG_MOTION_ARGUMENTS), OutputOptions, username,
+                        input, filterOptions + config.get(CONFIG_FFMPEG_MOTION_ARGUMENTS), OutputOptions, username,
                         password);
                 ffmpegRtspHelper.startConverting();
                 break;
