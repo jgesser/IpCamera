@@ -83,7 +83,7 @@ public class OnvifConnection {
     String snapshotUri = "";
     String rtspUri = "";
     IpCameraHandler ipCameraHandler;
-    boolean useEvents = false;
+    boolean usingEvents = false;
 
     // These hold the cameras PTZ position in the range that the camera uses, ie
     // mine is -1 to +1
@@ -266,7 +266,7 @@ public class OnvifConnection {
             if (ptzDevice) {
                 sendPTZRequest("GetNodes");
             }
-            if (useEvents) {// stops API cameras from getting sent ONVIF events.
+            if (usingEvents) {// stops API cameras from getting sent ONVIF events.
                 sendOnvifRequest(requestBuilder("GetEventProperties", eventXAddr));
                 sendOnvifRequest(requestBuilder("GetServiceCapabilities", eventXAddr));
             }
@@ -312,12 +312,12 @@ public class OnvifConnection {
                 ipCameraHandler.rtspUri = rtspUri;
             }
         } else {
-            logger.debug("Unhandled Onvif reply is:{}", message);
+            logger.trace("Unhandled Onvif reply is:{}", message);
         }
     }
 
     HttpRequest requestBuilder(String requestType, String xAddr) {
-        logger.debug("Sending ONVIF request:{}", requestType);
+        logger.trace("Sending ONVIF request:{}", requestType);
         String security = "";
         String extraEnvelope = " xmlns:a=\"http://www.w3.org/2005/08/addressing\"";
         String headerTo = "";
@@ -474,7 +474,6 @@ public class OnvifConnection {
                     }
                 }
             }
-
         });
     }
 
@@ -515,7 +514,9 @@ public class OnvifConnection {
         String topic = fetchXML(eventMessage, "Topic", "tns1:");
         String dataName = fetchXML(eventMessage, "tt:Data", "Name=\"");
         String dataValue = fetchXML(eventMessage, "tt:Data", "Value=\"");
-        logger.debug("Onvif Event Topic:{}, Data:{}, Value:{}", topic, dataName, dataValue);
+        if (!topic.equals("")) {
+            logger.debug("Onvif Event Topic:{}, Data:{}, Value:{}", topic, dataName, dataValue);
+        }
         switch (topic) {
             case "RuleEngine/CellMotionDetector/Motion":
                 if (dataValue.equals("true")) {
@@ -777,7 +778,7 @@ public class OnvifConnection {
     public void connect(boolean useEvents) {
         if (!isConnected) {
             sendOnvifRequest(requestBuilder("GetSystemDateAndTime", deviceXAddr));
-            this.useEvents = useEvents;
+            usingEvents = useEvents;
         }
     }
 
@@ -786,26 +787,26 @@ public class OnvifConnection {
     }
 
     public void disconnect() {
-        if (isConnected) {
-            isConnected = false;
-            if (useEvents) {
-                // sendEventRequest("Unsubscribe");
-                sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
-            }
-            presetTokens.clear();
-            mediaProfileTokens.clear();
-            if (!mainEventLoopGroup.isShutdown()) {
-                try {
-                    mainEventLoopGroup.awaitTermination(3, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                } finally {
-                    mainEventLoopGroup = new NioEventLoopGroup();
-                    bootstrap = null;
-                }
+        isConnected = false;
+        /*
+         * if (usingEvents) {
+         * sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
+         * try {
+         * Thread.sleep(500);
+         * } catch (InterruptedException e) {
+         * }
+         * }
+         */
+        presetTokens.clear();
+        mediaProfileTokens.clear();
+        if (!mainEventLoopGroup.isShutdown()) {
+            try {
+                mainEventLoopGroup.awaitTermination(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                logger.info("Onvif was not shutdown correctly due to being interrupted");
+            } finally {
+                mainEventLoopGroup = new NioEventLoopGroup();
+                bootstrap = null;
             }
         }
     }

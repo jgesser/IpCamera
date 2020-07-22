@@ -950,7 +950,7 @@ public class IpCameraHandler extends BaseThingHandler {
     // the stream.
     public void setupMjpegStreaming(boolean start, ChannelHandlerContext ctx) {
         if (start) {
-            if (mjpegChannelGroup.isEmpty()) {
+            if (mjpegChannelGroup.isEmpty()) {// first stream being requested.
                 mjpegChannelGroup.add(ctx.channel());
                 if (mjpegUri.equals("") || mjpegUri.equals("ffmpeg")) {
                     sendMjpegFirstPacket(ctx);
@@ -963,11 +963,11 @@ public class IpCameraHandler extends BaseThingHandler {
                     }
                     sendHttpGET(mjpegUri);
                 }
-            } else if (!firstStreamedMsg.toString().isEmpty()) {
-                ctx.channel().writeAndFlush(firstStreamedMsg);
-                mjpegChannelGroup.add(ctx.channel());
-            } else if (ffmpegMjpeg != null) {
+            } else if (ffmpegMjpeg != null) {// not first stream and we will use ffmpeg
                 sendMjpegFirstPacket(ctx);
+                mjpegChannelGroup.add(ctx.channel());
+            } else {// not first stream and camera supplies the mjpeg source.
+                ctx.channel().writeAndFlush(firstStreamedMsg);
                 mjpegChannelGroup.add(ctx.channel());
             }
         } else {
@@ -1559,8 +1559,6 @@ public class IpCameraHandler extends BaseThingHandler {
         listOfOnlineCameraUID.add(getThing().getUID().getId());
         if (cameraConnectionJob != null) {
             cameraConnectionJob.cancel(false);
-            // cameraConnection.shutdown();
-            // cameraConnection = Executors.newScheduledThreadPool(1);
         }
 
         if (preroll > 0 || updateImageEvents.contains("1")) {
@@ -1643,7 +1641,9 @@ public class IpCameraHandler extends BaseThingHandler {
     public void cameraCommunicationError(String reason) {
         // will try to reconnect again as camera may be rebooting.
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, reason);
-        resetAndRetryConnecting();
+        if (isOnline) {// if already offline dont try reconnecting in 6 seconds, we want 30sec wait.
+            resetAndRetryConnecting();
+        }
     }
 
     boolean streamIsStopped(String url) {
@@ -1883,30 +1883,12 @@ public class IpCameraHandler extends BaseThingHandler {
                     "The Image channel is set to update more often than 8 seconds. This is not recommended. The Image channel is best used only for higher poll times. See the readme file on how to display the cameras picture for best results or use a higher poll time.");
         }
         // Waiting 3 seconds for ONVIF to discover the urls before running.
-        cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 6, 28, TimeUnit.SECONDS);
+        cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 6, 30, TimeUnit.SECONDS);
     }
 
     // What the camera needs to re-connect if the initialize() is not called.
     private void resetAndRetryConnecting() {
         restart();
-        /*
-         * if (!thing.getThingTypeUID().getId().equals("HTTPONLY")) {
-         * onvifCamera.connect(thing.getThingTypeUID().getId().equals("ONVIF"));
-         * }
-         * if (!"-1".contentEquals(config.get(CONFIG_SERVER_PORT).toString())) {
-         * if (serversLoopGroup.isShuttingDown()) {
-         * try {
-         * serversLoopGroup.awaitTermination(20, TimeUnit.SECONDS);
-         * } catch (InterruptedException e) {
-         * }
-         * }
-         * if (serversLoopGroup.isShutdown()) {
-         * startStreamServer(true);
-         * }
-         * }
-         * cameraConnectionJob = cameraConnection.scheduleWithFixedDelay(pollingCameraConnection, 6, 28,
-         * TimeUnit.SECONDS);
-         */
         initialize();
     }
 

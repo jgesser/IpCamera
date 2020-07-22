@@ -125,18 +125,18 @@ public class Ffmpeg {
             } finally {
                 switch (format) {
                     case "GIF":
-                        logger.debug("Animated GIF has been created and is ready for use.");
                         try {
                             // Without a small delay, Pushover sends no file 10% of time.
-                            Thread.sleep(500);
+                            Thread.sleep(800);
                         } catch (InterruptedException e) {
                         }
+                        logger.debug("Animated GIF has been created and is ready for use.");
                         ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
                         break;
                     case "RECORD":
                         logger.debug("MP4 has been created and is ready for use.");
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(800);
                         } catch (InterruptedException e) {
                         }
                         ipCameraHandler.setChannelState(CHANNEL_RECORD_MP4, DecimalType.ZERO);
@@ -156,7 +156,7 @@ public class Ffmpeg {
                 ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("ON"));
                 if (keepAlive > -1) {
                     try {
-                        Thread.sleep(4500); // Used for on demand HLS to give ffmpeg time to produce the files needed.
+                        Thread.sleep(4000); // Used for on demand HLS to give ffmpeg time to produce the files needed.
                     } catch (InterruptedException e) {
                     }
                 }

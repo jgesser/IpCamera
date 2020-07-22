@@ -167,10 +167,10 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                         }
                         if (content.contains("<triggering>low</triggering>")) {
                             ipCameraHandler.setChannelState(CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT,
-                                    OnOffType.valueOf("ON"));
+                                    OnOffType.valueOf("OFF"));
                         } else if (content.contains("<triggering>high</triggering>")) {
                             ipCameraHandler.setChannelState(CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT,
-                                    OnOffType.valueOf("OFF"));
+                                    OnOffType.valueOf("ON"));
                         }
                         break;
                     case "LineDetection":
@@ -431,7 +431,7 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                 return;
             case CHANNEL_TRIGGER_EXTERNAL_ALARM_INPUT:
                 logger.debug("Changing triggering state of the external input 1 to {}", command.toString());
-                if (command.toString().equals("ON")) {
+                if (command.toString().equals("OFF")) {
                     hikChangeSetting("/ISAPI/System/IO/inputs/" + nvrChannel, "triggering",
                             "<triggering>low</triggering>");
                 } else {

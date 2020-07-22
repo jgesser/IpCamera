@@ -675,7 +675,7 @@ BabyCamZoom.sendCommand(0)
 
 ## FFmpeg Motion and Audio Alarms
 
-Any camera with a RTSP feed can use FFmpeg to create either a ``motionAlarm`` or ``audioAlarm``. Even if your camera has a motion alarm you may find that it does not provide enough flexibility to ignore moving trees or have its sensitivity adjusted on the fly. This is where this feature can come in handy as you can add your own FFmpeg agruments to use the Crop feature as this wont effect the video feeds you watch.
+Any camera with a RTSP feed can use FFmpeg to create either a ``ffmpegMotionAlarm`` or ``audioAlarm``. Even if your camera has a motion alarm, you may find that it does not provide enough flexibility to ignore moving trees, or have its sensitivity adjusted on the fly like reducing its sensitivity during rain. This is where this feature can come in handy as you can even add your own FFmpeg arguments (options) to use the Crop or any other ffmpeg filter as this wont effect the video feeds you watch.
 <https://ffmpeg.org/ffmpeg-filters.html#Examples-52>
 
 

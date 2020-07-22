@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -113,9 +112,10 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                                 ipCameraHandler.setupFfmpegFormat("HLS");
                             }
                             if (ipCameraHandler.ffmpegHLS != null) {
-                                ipCameraHandler.ffmpegHLS.setKeepAlive(60);
+                                ipCameraHandler.ffmpegHLS.setKeepAlive(8);
                             }
                             sendFile(ctx, httpRequest.uri(), "application/x-mpegurl");
+                            ctx.close();
                             return;
                         case "/ipcamera.mpd":
                             sendFile(ctx, httpRequest.uri(), "application/dash+xml");
@@ -152,7 +152,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close();
                             return;
                         case "/ipcamera0.ts":
-                            TimeUnit.SECONDS.sleep(6);
+                            // TimeUnit.SECONDS.sleep(3);// was 6
                         default:
                             if (httpRequest.uri().contains(".ts")) {
                                 sendFile(ctx, queryStringDecoder.path(), "video/MP2T");
@@ -164,6 +164,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             } else if (httpRequest.uri().contains(".mp4")) {
                                 sendFile(ctx, queryStringDecoder.path(), "video/mp4");
                             }
+                            ctx.close();
                             return;
                     }
                 } else if ("POST".equalsIgnoreCase(httpRequest.method().toString())) {
@@ -245,7 +246,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType);
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_CACHE);
-        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         response.headers().add(HttpHeaderNames.CONTENT_LENGTH, chunkedFile.length());
         response.headers().add("Access-Control-Allow-Origin", "*");
         response.headers().add("Access-Control-Expose-Headers", "*");
@@ -299,6 +300,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
+        ctx.close();
         // logger.trace("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);

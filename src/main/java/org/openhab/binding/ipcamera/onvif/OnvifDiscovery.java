@@ -48,6 +48,9 @@ import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 
 /**
@@ -201,40 +204,28 @@ public class OnvifDiscovery {
         return brand;
     }
 
-    public void discoverCameras() throws UnknownHostException, InterruptedException {
+    DefaultFullHttpRequest ssdp() {
+        DefaultFullHttpRequest ssdp = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("M-SEARCH"), "*");
+        ssdp.headers().set("HOST", "239.255.255.250:1900");
+        ssdp.headers().set("MAN", "ssdp:discover");
+        ssdp.headers().set("MX", "1");
+        ssdp.headers().set("ST", "urn:dial-multiscreen-org:service:dial:1");
+        ssdp.headers().set("USER-AGENT", "Microsoft Edge/83.0.478.61 Windows");
+        return ssdp;
+    }
+
+    public void discoverCameras(int port) throws UnknownHostException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
-        final String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><e:Envelope xmlns:e=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:w=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\"><e:Header><w:MessageID>uuid:"
-                + uuid
-                + "</w:MessageID><w:To e:mustUnderstand=\"true\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</w:To><w:Action a:mustUnderstand=\"true\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</w:Action></e:Header><e:Body><d:Probe><d:Types xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></d:Probe></e:Body></e:Envelope>";
+        String xml = "";
 
-        // final String xml = "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
-        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
-        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:"
-        // + uuid
-        // +
-        // "</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
-        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
-        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
-        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
-        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope><s:Envelope
-        // xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
-        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
-        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:9bdc3826-955c-428a-8553-72ed7aaffe3a</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
-        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
-        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
-        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
-        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope><s:Envelope
-        // xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\"
-        // xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action
-        // s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:9bdc3826-955c-428a-8553-72ed7aaffe3a</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To
-        // s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe
-        // xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types
-        // xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"
-        // xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope>";
-
+        if (port == 3702) {
+            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><e:Envelope xmlns:e=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:w=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\"><e:Header><w:MessageID>uuid:"
+                    + uuid
+                    + "</w:MessageID><w:To e:mustUnderstand=\"true\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</w:To><w:Action a:mustUnderstand=\"true\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</w:Action></e:Header><e:Body><d:Probe><d:Types xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></d:Probe></e:Body></e:Envelope>";
+        }
         ByteBuf discoveryProbeMessage = Unpooled.copiedBuffer(xml, 0, xml.length(), StandardCharsets.UTF_8);
         InetSocketAddress localNetworkAddress = new InetSocketAddress(0);// Listen for replies on all connections.
-        InetSocketAddress multiCastAddress = new InetSocketAddress(InetAddress.getByName("239.255.255.250"), 3702);
+        InetSocketAddress multiCastAddress = new InetSocketAddress(InetAddress.getByName("239.255.255.250"), port);
         DatagramPacket datagramPacket = new DatagramPacket(discoveryProbeMessage, multiCastAddress,
                 localNetworkAddress);
         NetworkInterface networkInterface = getLocalNIF();
@@ -259,7 +250,14 @@ public class OnvifDiscovery {
 
         datagramChannel = (DatagramChannel) bootstrap.bind(localNetworkAddress).sync().channel();
         datagramChannel.joinGroup(multiCastAddress, networkInterface).sync();
-        ChannelFuture chFuture = datagramChannel.writeAndFlush(datagramPacket);
+        ChannelFuture chFuture;
+        if (port == 1900) {
+            chFuture = datagramChannel.writeAndFlush(ssdp());
+        } else {
+            chFuture = datagramChannel.writeAndFlush(datagramPacket);
+        }
+
+        // ChannelFuture chFuture = datagramChannel.writeAndFlush(datagramPacket);
         chFuture.awaitUninterruptibly(2000);
         chFuture = datagramChannel.closeFuture();
         chFuture.awaitUninterruptibly(6000);
