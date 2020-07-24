@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -48,9 +49,6 @@ import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 
 /**
@@ -95,12 +93,12 @@ public class OnvifDiscovery {
             sectionHeaderBeginning = message.indexOf(sectionHeading);
         }
         if (sectionHeaderBeginning == -1) {
-            logger.debug("{} was not found in :{}", sectionHeading, message);
+            // logger.debug("{} was not found in :{}", sectionHeading, message);
             return "";
         }
         int startIndex = message.indexOf(key, sectionHeaderBeginning + sectionHeading.length());
         if (startIndex == -1) {
-            logger.debug("{} was not found in :{}", key, message);
+            // logger.debug("{} was not found in :{}", key, message);
             return "";
         }
         int endIndex = message.indexOf("<", startIndex + key.length());
@@ -149,11 +147,15 @@ public class OnvifDiscovery {
 
     void processCameraReplys() {
         for (DatagramPacket packet : listOfReplys) {
+            logger.trace(packet.toString());
             String xml = packet.content().toString(CharsetUtil.UTF_8);
             String xAddr = fetchXML(xml, "", "<d:XAddrs>");
             if (!xAddr.equals("")) {
-                logger.trace("Discovery packet back from camera:{}", xml);
+                // logger.trace("Discovery packet back from camera:{}", xml);
                 searchReply(xAddr, xml);
+            } else if (xml.contains("onvif")) {
+                logger.info("Possible ONVIF camera found at:{}", packet.sender().getHostString());
+                ipCameraDiscoveryService.newCameraFound("ONVIF", packet.sender().getHostString(), 80);
             }
         }
     }
@@ -204,16 +206,6 @@ public class OnvifDiscovery {
         return brand;
     }
 
-    DefaultFullHttpRequest ssdp() {
-        DefaultFullHttpRequest ssdp = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("M-SEARCH"), "*");
-        ssdp.headers().set("HOST", "239.255.255.250:1900");
-        ssdp.headers().set("MAN", "ssdp:discover");
-        ssdp.headers().set("MX", "1");
-        ssdp.headers().set("ST", "urn:dial-multiscreen-org:service:dial:1");
-        ssdp.headers().set("USER-AGENT", "Microsoft Edge/83.0.478.61 Windows");
-        return ssdp;
-    }
-
     public void discoverCameras(int port) throws UnknownHostException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
         String xml = "";
@@ -252,14 +244,19 @@ public class OnvifDiscovery {
         datagramChannel.joinGroup(multiCastAddress, networkInterface).sync();
         ChannelFuture chFuture;
         if (port == 1900) {
-            chFuture = datagramChannel.writeAndFlush(ssdp());
+            String ssdp = "M-SEARCH * HTTP/1.1\n" + "HOST: 239.255.255.250:1900\n" + "MAN: \"ssdp:discover\"\n"
+                    + "MX: 1\n" + "ST: urn:dial-multiscreen-org:service:dial:1\n"
+                    + "USER-AGENT: Microsoft Edge/83.0.478.61 Windows\n" + "\n" + "";
+            ByteBuf ssdpProbeMessage = Unpooled.copiedBuffer(ssdp, 0, ssdp.length(), StandardCharsets.UTF_8);
+            datagramPacket = new DatagramPacket(ssdpProbeMessage, multiCastAddress, localNetworkAddress);
+            chFuture = datagramChannel.writeAndFlush(datagramPacket);
         } else {
             chFuture = datagramChannel.writeAndFlush(datagramPacket);
         }
-
-        // ChannelFuture chFuture = datagramChannel.writeAndFlush(datagramPacket);
         chFuture.awaitUninterruptibly(2000);
         chFuture = datagramChannel.closeFuture();
+        TimeUnit.SECONDS.sleep(5);
+        datagramChannel.close();
         chFuture.awaitUninterruptibly(6000);
         processCameraReplys();
         bootstrap.config().group().shutdownGracefully();

@@ -10,7 +10,7 @@ To see what each brand has implemented from their API's, please see this post:
 
 ## What to do if you have problems
 
-+ Check this readme to see if there are any special setup steps that are needed for your brand, they are listed in the next section.
++ Check this readme to see if there are any special setup steps that are needed for your brand of camera. They are listed in the next section.
 + Always look at the log files, which includes looking at the logs with TRACE enabled. This readme has a section on logs to explain how to do this. To keep your log file clean, the binding holds back a lot of useful fault finding information out of the logs unless you turn on DEBUG or TRACE logging.
 + Search the forum using any error messages to help you find how others with the same problem have already solved it. Always read this file first as forum posts can be out dated where this file should always be current.
 + Only after doing the above ask for help in the forum and create a new thread, then when it is fixed post how and mark the thread as solved to help others. This is how a community helps each other out and no one is paid as Openhab is an opensource project with all volunteers.
@@ -19,9 +19,9 @@ To see what each brand has implemented from their API's, please see this post:
 
 ## Special notes for different brands
 
-**Generic Cameras**
+**Generic RTSP Cameras**
 
-The binding can create snapshots, motion and audio alarms for cameras that only have a RTSP url, it requires FFmpeg to be installed for these features to work and this must be done manually.
+This binding can create snapshots, motion and audio alarms for cameras that only have a RTSP url, it requires FFmpeg to be installed for these features to work and this must be done manually.
 Some features also may not work fully unless your camera has a snapshot URL, but most will work with the FFmpeg generated snapshots from a RTSP source.
 The Image channel will not update when using FFmpeg to create snapshots, so you will need to use one of the other much better methods like ``ipcamera.jpg`` that is explained in this readme.
 Using FFmpeg to create snapshots requires much more CPU, and you can turn this CPU load on and off via the `updateImageNow` channel using a switch or rule.
@@ -137,13 +137,14 @@ The latter option is the easiest.
 
 ## Installing the binding and Discovery
 
-Installing the binding is as simple as first stopping Openhab from running (very important to stop it first) and then drop all the JAR files from inside the ZIP, into the ``addons`` folder. 
-Ignore any errors until multiple restarts to Openhab are made, this is to allow the cache to be created.
-
 You do not use PaperUI to install this binding as it is not yet merged.
 
+Installing the binding is as simple as first stopping Openhab from running then drop all the JAR files from inside the ZIP, into the ``addons`` folder. 
+Ignore any errors until multiple restarts to Openhab are made, this is to allow the cache to be created.
+
+
 Auto discovery can be used, however I would recommend using textual configuration which is covered below in more detail.
-Textual config should be preferred whilst the binding is under going a lot of changes as the channels and config items appear to be stored in a database and are not checked to be correct by the Openhab framework. 
+Textual config should be preferred whilst the binding is under going a lot of changes as the channels and config items appear to be stored in the database and are not checked to be correct by the Openhab framework if the binding gets changed. 
 If you use auto discovery or manually add a camera with PaperUI, it may/will be required to delete the camera and re-add it for the DB to be refreshed with the correct data each time you change the version of the binding.
 Only a THING file is needed to make changing versions far easier, the rest can be done via paperUI if you wish instead of ITEM files.
 
@@ -391,10 +392,9 @@ The URL must be in this format without the IP:Port info and the binding will han
 ## Full Example
 
 Use the following examples to base your setup on to save some time. 
-In the example below I believe older versions of OpenHAB needed a fake address in the "Image url=" line, however Openhab 2.4 and newer do not need this to work but for backwards compatibility reasons it was left in the examples. 
-The item= overrides the url. 
 
-NOTE: If you used PaperUI to create the camera thing instead of textual config, you will need to ensure the 001 is replaced with the cameras UID which may look like "0A78687F". 
+NOTE: If you used PaperUI to create the camera thing instead of textual config, you will need to ensure the 001 is replaced with the cameras UID which may look like "0A78687F" or the IP address without the dots if it was found with auto discovery.
+
 Also replace AMCREST or HIKVISION with the name of the supported thing you are using from the list above.
 
 
@@ -417,7 +417,6 @@ Thing ipcamera:DAHUA:001
 [ 
     IPADDRESS="192.168.0.5", PASSWORD="suitcase123456",
     USERNAME="admin",
-    POLL_CAMERA_MS=1000,
     SERVER_PORT=54321,
     FFMPEG_OUTPUT="/tmpfs/camera1/"
 ]
@@ -426,14 +425,13 @@ Thing ipcamera:HIKVISION:002
 [
     IPADDRESS="192.168.0.6", PASSWORD="suitcase123456",
     USERNAME="admin",
-    POLL_CAMERA_MS=1000,
     SERVER_PORT=54322,
     FFMPEG_OUTPUT="/tmpfs/camera2/"
 ]
 
 Thing ipcamera:HTTPONLY:TestCam
 [
-    IPADDRESS="192.168.0.7", PASSWORD="pass123", USERNAME="admin", POLL_CAMERA_MS=1000, SERVER_PORT=54323,
+    IPADDRESS="192.168.0.7", PASSWORD="pass123", USERNAME="admin", SERVER_PORT=54323,
     SNAPSHOT_URL_OVERRIDE="http://192.168.1.65/tmpfs/snap.jpg", //remove this line if your camera has none
     STREAM_URL_OVERRIDE="ffmpeg",
     FFMPEG_OUTPUT="/tmpfs/HttpTest/", 
@@ -625,7 +623,7 @@ See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings
 Moving the camera using Relative or Continuous (the config ``PTZ_CONTINUOUS`` must be true) movements can be done by sending the INCREASE and DECREASE commands to the Pan, Tilt and Zoom channels.
 When the config is set to false (the default if not specified) the binding will send Relative movements. 
 There are some widgets created in the Habpanel widget gallery that you can download and use right away saving you time if your camera supports either presets, relative or continuous modes.
-For sitemaps the ``Setpoint`` buttons will send INCREASE and DECREASE commands and not the usual ON and OFF that a switch normally sends.
+For sitemaps the below example can be used.
 The OFF command (can be sent to any of the PTZ channels) will stop the cameras movements in the case of continuous being selected in the things config setup.
 
 

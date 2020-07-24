@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -152,9 +153,11 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close();
                             return;
                         case "/ipcamera0.ts":
-                            // TimeUnit.SECONDS.sleep(3);// was 6
+                        case "/ipcamera1.ts":
+                            // TimeUnit.MILLISECONDS.sleep(10);// Give time for file to be created.
                         default:
                             if (httpRequest.uri().contains(".ts")) {
+                                TimeUnit.MILLISECONDS.sleep(75);// Give time for file to be created.
                                 sendFile(ctx, queryStringDecoder.path(), "video/MP2T");
                             } else if (httpRequest.uri().contains(".jpg")) {
                                 // Allow access to the preroll and postroll jpg files
@@ -164,7 +167,6 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             } else if (httpRequest.uri().contains(".mp4")) {
                                 sendFile(ctx, queryStringDecoder.path(), "video/mp4");
                             }
-                            ctx.close();
                             return;
                     }
                 } else if ("POST".equalsIgnoreCase(httpRequest.method().toString())) {

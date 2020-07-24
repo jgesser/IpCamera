@@ -787,16 +787,14 @@ public class OnvifConnection {
     }
 
     public void disconnect() {
+        if (usingEvents && isConnected) {
+            sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+        }
         isConnected = false;
-        /*
-         * if (usingEvents) {
-         * sendOnvifRequest(requestBuilder("Unsubscribe", subscriptionXAddr));
-         * try {
-         * Thread.sleep(500);
-         * } catch (InterruptedException e) {
-         * }
-         * }
-         */
         presetTokens.clear();
         mediaProfileTokens.clear();
         if (!mainEventLoopGroup.isShutdown()) {
@@ -805,6 +803,7 @@ public class OnvifConnection {
             } catch (InterruptedException e) {
                 logger.info("Onvif was not shutdown correctly due to being interrupted");
             } finally {
+                // logger.debug("Onvif Shutdown");
                 mainEventLoopGroup = new NioEventLoopGroup();
                 bootstrap = null;
             }
