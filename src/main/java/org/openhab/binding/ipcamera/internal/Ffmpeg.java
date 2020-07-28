@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+x * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -132,6 +132,8 @@ public class Ffmpeg {
                         }
                         logger.debug("Animated GIF has been created and is ready for use.");
                         ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
+                        ipCameraHandler.setChannelState(CHANNEL_GIF_HISTORY_LENGTH,
+                                new DecimalType(++ipCameraHandler.gifHistoryLength));
                         break;
                     case "RECORD":
                         logger.debug("MP4 has been created and is ready for use.");

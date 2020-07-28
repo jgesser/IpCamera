@@ -262,7 +262,23 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                         }
                         break;
                     default:
-                        logger.debug("Unhandled reply-{}.", content);
+                        if (content.contains("<EventNotificationAlert")) {
+                            if (content.contains("hannelID>" + nvrChannel + "</")
+                                    || content.contains("<channelID>0</channelID>")) {// some camera use c or
+                                                                                      // <dynChannelID>
+                                if (content.contains(
+                                        "<eventType>videoloss</eventType>\r\n<eventState>inactive</eventState>")) {
+                                    if (vmdCount > 1) {
+                                        vmdCount = 1;
+                                    }
+                                    countDown();
+                                    countDown();
+                                }
+                                countDown();
+                            }
+                        } else {
+                            logger.debug("Unhandled reply-{}.", content);
+                        }
                         break;
                 }
             }

@@ -104,9 +104,13 @@
 		<channel id="image" typeId="image"/>        				
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="gifFilename" typeId="gifFilename"/>
+		<channel id="gifHistory" typeId="gifHistory"/>
+		<channel id="gifHistoryLength" typeId="gifHistoryLength"/>		
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
-        <channel id="mp4Filename" typeId="mp4Filename"/>
+        <channel id="mp4Filename" typeId="mp4Filename"/>        
+        <channel id="mp4History" typeId="mp4History"/>
+        <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
         <channel id="lastMotionType" typeId="lastMotionType"/>				
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
@@ -338,11 +342,15 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<channel id="startStream" typeId="startStream"/>
 		<channel id="updateImageNow" typeId="updateImageNow"/>
 		<channel id="image" typeId="image"/>        		
-		<channel id="updateGif" typeId="updateGif"/>
+		<channel id="updateGif" typeId="updateGif"/>		
 		<channel id="gifFilename" typeId="gifFilename"/>
+        <channel id="gifHistory" typeId="gifHistory"/>
+        <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
+        <channel id="mp4History" typeId="mp4History"/>
+        <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
         <channel id="lastMotionType" typeId="lastMotionType"/>	
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
@@ -595,9 +603,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<channel id="image" typeId="image"/>			
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="gifHistory" typeId="gifHistory"/>
+            <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="mp4History" typeId="mp4History"/>
+            <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
             <channel id="lastMotionType" typeId="lastMotionType"/>
             <channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
             <channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>					
@@ -850,9 +862,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="gifHistory" typeId="gifHistory"/>
+            <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
-            <channel id="mp4Filename" typeId="mp4Filename"/>			
+            <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="mp4History" typeId="mp4History"/>
+            <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>			
 			<channel id="lastMotionType" typeId="lastMotionType"/>
 			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>			
@@ -1119,9 +1135,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="gifHistory" typeId="gifHistory"/>
+            <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="mp4History" typeId="mp4History"/>
+            <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
 			<channel id="lastMotionType" typeId="lastMotionType"/>
 			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
@@ -1360,9 +1380,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<channel id="image" typeId="image"/>
 		<channel id="updateGif" typeId="updateGif"/>
 		<channel id="gifFilename" typeId="gifFilename"/>
+		<channel id="gifHistory" typeId="gifHistory"/>
+        <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
+        <channel id="mp4History" typeId="mp4History"/>
+        <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
         <channel id="lastMotionType" typeId="lastMotionType"/>		
 		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
@@ -1622,9 +1646,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="gifHistory" typeId="gifHistory"/>
+            <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="mp4History" typeId="mp4History"/>
+            <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
 			<channel id="lastMotionType" typeId="lastMotionType"/>
 			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>			
@@ -1889,9 +1917,13 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 			<channel id="image" typeId="image"/>
 			<channel id="updateGif" typeId="updateGif"/>
 			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="gifHistory" typeId="gifHistory"/>
+            <channel id="gifHistoryLength" typeId="gifHistoryLength"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="mp4History" typeId="mp4History"/>
+            <channel id="mp4HistoryLength" typeId="mp4HistoryLength"/>
             <channel id="lastMotionType" typeId="lastMotionType"/>			
 			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="ffmpegMotionAlarm" typeId="ffmpegMotionAlarm"/>
@@ -2156,6 +2188,18 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 <description>Turn ON to create an animated GIF called ipcamera.gif with ffmpeg. When the file is created the switch will move itself back to OFF.</description>
 </channel-type>
 
+<channel-type id="gifHistory">
+<item-type>String</item-type>
+<label>Gif Filename History</label>
+<description>A history of the last gifs created in a CSV formatted string.</description>
+</channel-type>
+        
+<channel-type id="gifHistoryLength">
+<item-type>Number</item-type>
+<label>gifHistoryLength</label>
+<description>How many gifs are stored in the history.</description>
+</channel-type>
+
 <channel-type id="mp4Filename">
 <item-type>String</item-type>
 <label>MP4 Filename</label>
@@ -2169,6 +2213,18 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 <description>Set this channel to how many seconds you wish to record for. When the file is created the channel will change to 0 by itself.</description>
 <category>Time</category>
 <state min="0" max="10800" step="1" pattern="%.1f Seconds" readOnly="false" />
+</channel-type>
+
+<channel-type id="mp4History">
+<item-type>String</item-type>
+<label>Mp4 Filename History</label>
+<description>A history of the last mp4 recordings created in a CSV formatted string.</description>
+</channel-type>
+        
+<channel-type id="mp4HistoryLength">
+<item-type>Number</item-type>
+<label>mp4HistoryLength</label>
+<description>How many mp4 recordings are stored in the history.</description>
 </channel-type>
 
 <channel-type id="mp4Preroll">
@@ -2515,7 +2571,7 @@ The Image channel can be set to update in a number of ways. Recommend you set th
 		<item-type>String</item-type>
 		<label>API Access</label>
 		<description>Change the string to the correct URL format and the binding will send the GET request to the camera.</description>
-		</channel-type>
+		</channel-type>       
 		
 <channel-type id="gotoPreset">
 <item-type>Number</item-type>

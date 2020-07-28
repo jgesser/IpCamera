@@ -153,12 +153,13 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close();
                             return;
                         case "/ipcamera0.ts":
-                        case "/ipcamera1.ts":
                             // TimeUnit.MILLISECONDS.sleep(10);// Give time for file to be created.
                         default:
                             if (httpRequest.uri().contains(".ts")) {
                                 TimeUnit.MILLISECONDS.sleep(75);// Give time for file to be created.
                                 sendFile(ctx, queryStringDecoder.path(), "video/MP2T");
+                            } else if (httpRequest.uri().contains(".gif")) {
+                                sendFile(ctx, queryStringDecoder.path(), "image/gif");
                             } else if (httpRequest.uri().contains(".jpg")) {
                                 // Allow access to the preroll and postroll jpg files
                                 sendFile(ctx, queryStringDecoder.path(), "image/jpg");

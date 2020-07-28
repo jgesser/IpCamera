@@ -163,6 +163,10 @@ public class IpCameraHandler extends BaseThingHandler {
             "");
     private String nvrChannel = "";
     private String gifFilename = "ipcamera";
+    private String gifHistory = "";
+    private String mp4History = "";
+    public int gifHistoryLength = 0;
+    public int mp4HistoryLength = 0;
     private String mp4Filename = "ipcamera";
     int mp4RecordTime = 0;
     int mp4Preroll = 0;
@@ -1081,28 +1085,32 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 break;
             case "GIF":
-                if (ffmpegGIF == null) {
-                    if (preroll > 0) {
-                        ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-y -r 1 -hide_banner -loglevel warning", ffmpegOutputFolder + "snapshot%d.jpg",
-                                "-frames:v " + (preroll + postroll) + " "
-                                        + config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
-                                ffmpegOutputFolder + gifFilename + ".gif", username, password);
-                    } else {
-                        inOptions = "-y -t " + postroll + " -rtsp_transport tcp -hide_banner -loglevel warning";
-                        if (!rtspUri.contains("rtsp")) {
-                            inOptions = "-y -t " + postroll;
-                        }
-                        ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
-                                rtspUri, config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
-                                ffmpegOutputFolder + gifFilename + ".gif", username, password);
+                if (preroll > 0) {
+                    ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
+                            "-y -r 1 -hide_banner -loglevel warning", ffmpegOutputFolder + "snapshot%d.jpg",
+                            "-frames:v " + (preroll + postroll) + " "
+                                    + config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
+                            ffmpegOutputFolder + gifFilename + ".gif", username, password);
+                } else {
+                    inOptions = "-y -t " + postroll + " -rtsp_transport tcp -hide_banner -loglevel warning";
+                    if (!rtspUri.contains("rtsp")) {
+                        inOptions = "-y -t " + postroll;
                     }
+                    ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
+                            rtspUri, config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
+                            ffmpegOutputFolder + gifFilename + ".gif", username, password);
                 }
                 if (preroll > 0) {
                     storeSnapshots();
                 }
                 if (ffmpegGIF != null) {
                     ffmpegGIF.startConverting();
+                    if (gifHistory.equals("")) {
+                        gifHistory = gifFilename;
+                    } else if (!gifFilename.equals("ipcamera") && gifHistoryLength < 50) {
+                        gifHistory += "," + gifFilename;
+                    }
+                    setChannelState(CHANNEL_GIF_HISTORY, new StringType(gifHistory));
                 }
                 break;
             case "RECORD":
@@ -1113,10 +1121,16 @@ public class IpCameraHandler extends BaseThingHandler {
                 ffmpegRecord = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
                         rtspUri, "-an -vcodec copy", ffmpegOutputFolder + mp4Filename + ".mp4", username, password);
                 if (mp4Preroll > 0) {
-                    // fetchFromHLS();
+                    // fetchFromHLS(); todo: not done yet
                 }
                 if (ffmpegRecord != null) {
                     ffmpegRecord.startConverting();
+                    if (mp4History.equals("")) {
+                        mp4History = "mp4Filename";
+                    } else if (!mp4Filename.equals("ipcamera") && mp4HistoryLength < 50) {
+                        mp4History += "," + mp4Filename;
+                    }
+                    setChannelState(CHANNEL_MP4_HISTORY, new StringType(mp4History));
                 }
                 break;
             case "RTSPHELPER":
@@ -1316,6 +1330,20 @@ public class IpCameraHandler extends BaseThingHandler {
         } // caution "REFRESH" can still progress to brand Handlers below the else.
         else {
             switch (channelUID.getId()) {
+                case CHANNEL_MP4_HISTORY_LENGTH:
+                    if ("0".equals(command.toString())) {
+                        mp4HistoryLength = 0;
+                        mp4History = "";
+                        setChannelState(CHANNEL_MP4_HISTORY, new StringType(mp4History));
+                    }
+                    return;
+                case CHANNEL_GIF_HISTORY_LENGTH:
+                    if ("0".equals(command.toString())) {
+                        gifHistoryLength = 0;
+                        gifHistory = "";
+                        setChannelState(CHANNEL_GIF_HISTORY, new StringType(gifHistory));
+                    }
+                    return;
                 case CHANNEL_FFMPEG_MOTION_CONTROL:
                     if ("ON".equals(command.toString())) {
                         motionAlarmEnabled = true;
