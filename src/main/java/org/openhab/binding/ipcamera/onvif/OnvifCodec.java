@@ -43,7 +43,7 @@ public class OnvifCodec extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
-        if (msg == null) {
+        if (msg == null || ctx == null) {
             return;
         }
         try {
@@ -53,7 +53,7 @@ public class OnvifCodec extends ChannelDuplexHandler {
             }
             if (msg instanceof LastHttpContent) {
                 onvifConnection.processReply(incomingMessage);
-                incomingMessage = "";
+                ctx.close();
             }
         } finally {
             ReferenceCountUtil.release(msg);
@@ -62,6 +62,10 @@ public class OnvifCodec extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) {
+        if (ctx == null) {
+            return;
+        }
         logger.debug("Exception on ONVIF connection: {}", cause);
+        ctx.close();
     }
 }

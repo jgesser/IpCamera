@@ -113,13 +113,12 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                                 ipCameraHandler.setupFfmpegFormat("HLS");
                             }
                             if (ipCameraHandler.ffmpegHLS != null) {
-                                ipCameraHandler.ffmpegHLS.setKeepAlive(60);
+                                ipCameraHandler.ffmpegHLS.setKeepAlive(8);
                             }
                             sendFile(ctx, httpRequest.uri(), "application/x-mpegurl");
+                            ctx.close();
                             return;
                         case "/ipcamera.mpd":
-                            // ipCameraHandler.setupFfmpegFormat("DASH");
-                            // ipCameraHandler.ffmpegDASH.setKeepAlive(60);// setup must come first
                             sendFile(ctx, httpRequest.uri(), "application/dash+xml");
                             return;
                         case "/ipcamera.gif":
@@ -154,10 +153,13 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close();
                             return;
                         case "/ipcamera0.ts":
-                            TimeUnit.SECONDS.sleep(6);
+                            // TimeUnit.MILLISECONDS.sleep(10);// Give time for file to be created.
                         default:
                             if (httpRequest.uri().contains(".ts")) {
+                                TimeUnit.MILLISECONDS.sleep(75);// Give time for file to be created.
                                 sendFile(ctx, queryStringDecoder.path(), "video/MP2T");
+                            } else if (httpRequest.uri().contains(".gif")) {
+                                sendFile(ctx, queryStringDecoder.path(), "image/gif");
                             } else if (httpRequest.uri().contains(".jpg")) {
                                 // Allow access to the preroll and postroll jpg files
                                 sendFile(ctx, queryStringDecoder.path(), "image/jpg");
@@ -209,6 +211,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         ipCameraHandler.lockCurrentSnapshot.unlock();
                         ipCameraHandler.processSnapshot();
                     } else if (onvifEvent) {
+                        logger.debug("StreamServer recieved a new event");
                         ipCameraHandler.onvifCamera.eventRecieved(new String(incomingJpeg, StandardCharsets.UTF_8));
                     } else {
                         if (recievedBytes > 1000) {
@@ -246,7 +249,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType);
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_CACHE);
-        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         response.headers().add(HttpHeaderNames.CONTENT_LENGTH, chunkedFile.length());
         response.headers().add("Access-Control-Allow-Origin", "*");
         response.headers().add("Access-Control-Expose-Headers", "*");
@@ -300,6 +303,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         if (ctx == null) {
             return;
         }
+        ctx.close();
         // logger.trace("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);
