@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2020 Contributors to the openHAB project
+x * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -43,8 +43,8 @@ public class Ffmpeg {
     private String ffmpegCommand = "", format = "";
     private String[] commandArray;
     private StreamRunning streamRunning = new StreamRunning();
-    private int keepAlive = 60;
-    boolean running = false;
+    private int keepAlive = 8;
+    private boolean running = false;
 
     public void setKeepAlive(int seconds) {
         if (seconds == -1) {
@@ -98,7 +98,7 @@ public class Ffmpeg {
                             logger.debug("{}", line);
                             if (line.contains("lavfi.")) {
                                 if (countOfMotions == 4) {
-                                    ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
+                                    ipCameraHandler.motionDetected(CHANNEL_FFMPEG_MOTION_ALARM);
                                 } else {
                                     countOfMotions++;
                                 }
@@ -107,13 +107,11 @@ public class Ffmpeg {
                                     countOfMotions--;
                                     countOfMotions--;
                                     if (countOfMotions <= 0) {
-                                        ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                                        ipCameraHandler.noMotionDetected(CHANNEL_FFMPEG_MOTION_ALARM);
                                     }
                                 }
                             } else if (line.contains("silence_start")) {
-                                ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                                ipCameraHandler.firstAudioAlarm = false;
-                                ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                                ipCameraHandler.noAudioDetected();
                             } else if (line.contains("silence_end")) {
                                 ipCameraHandler.audioDetected();
                             }
@@ -127,18 +125,20 @@ public class Ffmpeg {
             } finally {
                 switch (format) {
                     case "GIF":
-                        logger.debug("Animated GIF has been created and is ready for use.");
                         try {
                             // Without a small delay, Pushover sends no file 10% of time.
-                            Thread.sleep(500);
+                            Thread.sleep(800);
                         } catch (InterruptedException e) {
                         }
+                        logger.debug("Animated GIF has been created and is ready for use.");
                         ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
+                        ipCameraHandler.setChannelState(CHANNEL_GIF_HISTORY_LENGTH,
+                                new DecimalType(++ipCameraHandler.gifHistoryLength));
                         break;
                     case "RECORD":
                         logger.debug("MP4 has been created and is ready for use.");
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(800);
                         } catch (InterruptedException e) {
                         }
                         ipCameraHandler.setChannelState(CHANNEL_RECORD_MP4, DecimalType.ZERO);
@@ -158,14 +158,14 @@ public class Ffmpeg {
                 ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("ON"));
                 if (keepAlive > -1) {
                     try {
-                        Thread.sleep(4500); // Used for on demand HLS to give ffmpeg time to produce the files needed.
+                        Thread.sleep(7000); // Used for on demand HLS to give ffmpeg time to produce the files needed.
                     } catch (InterruptedException e) {
                     }
                 }
             }
         }
         if (keepAlive != -1) {
-            keepAlive = 60;
+            keepAlive = 8;
         }
     }
 
@@ -189,7 +189,7 @@ public class Ffmpeg {
                     ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("OFF"));
                 }
             }
-            keepAlive = 60;
+            keepAlive = 8;
         }
     }
 }
